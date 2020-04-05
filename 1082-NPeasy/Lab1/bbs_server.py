@@ -109,6 +109,9 @@ class BBS(threading.Thread):
 
     def run(self):
         print(f"New Connection.")
+        self.socket.send(b"********************************\n")
+        self.socket.send(b"** Welcome to the BBS server. **\n")
+        self.socket.send(b"********************************\n")
 
         while True:
             self.socket.send(b"% ")
