@@ -5,6 +5,7 @@ from db.users import Users
 
 Session = sessionmaker()
 
+
 class BBS_DB_BASE:
     def __init__(self, username, pwd):
         self.engine = self.get_engine(username, pwd)
@@ -25,9 +26,15 @@ class BBS_DB(BBS_DB_BASE):
         super().__init__(username, pwd)
 
     def create_user(self, username, email, password):
-        user = self.session.query(Users).filter_by(username=username).one_or_none()
+        """
+        Returns:
+            0: Register successfull
+            1: Username is already use
+        """
+        user = self.session.query(Users).filter_by(
+            username=username).one_or_none()
         if user:
-            return 'Username is already use.\n'
+            return 1
 
         new_user = Users(
             username=username,
@@ -36,4 +43,18 @@ class BBS_DB(BBS_DB_BASE):
         )
         self.session.add(new_user)
         self.session.commit()
-        return 'Register successfull.\n'
+        return 0
+
+    def login(self, username, password):
+        """
+        Returns:
+            0: Successfully login
+            1: Login failed
+        """
+        user = self.session.query(Users).filter_by(
+            username=username).one_or_none()
+
+        if user is None or user.password != password:
+            return 1
+        else:
+            return 0
