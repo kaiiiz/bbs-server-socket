@@ -13,25 +13,63 @@ DB_USERNAME = os.getenv('DB_ROOT_USERNAME')
 DB_PWD = os.getenv('DB_ROOT_PWD')
 
 
+class Shell():
+    def __init__(self, db):
+        self.db = db
+        self.user = None
+
+    def parse(self, cmd):
+        try:
+            cmd = cmd.strip().decode()
+        except:
+            return ''
+
+        if len(cmd) == 0:
+            return ''
+        else:
+            cmd_list = cmd.split()
+
+        return self.handle(cmd_list)
+
+    def handle(self, cmd_list):
+        if cmd_list[0] == 'register':
+            return self.register_handler(cmd_list)
+
+        elif cmd_list[0] == 'login':
+            return self.login_handler(cmd_list)
+
+        else:
+            return f'command not found: {cmd}\n'
+
+    def register_handler(self, cmd_list):
+        if len(cmd_list) != 4:
+            return 'usage: register <username> <email> <password>\n'
+
+        username = cmd_list[1]
+        email = cmd_list[2]
+        password = cmd_list[3]
+
+        return self.db.create_user(username, email, password)
+
+
 class BBS(threading.Thread):
     def __init__(self, socket, address, db):
         threading.Thread.__init__(self)
         self.socket = socket
         self.address = address
-        self.db = db
+        self.shell = Shell(db)
 
     def run(self):
         print(f'New Connection.')
 
         while True:
-            self.socket.send('% '.encode())
-            cmd = self.socket.recv(1024).strip()
-            ret = self.cmd_handler(cmd)
+            self.socket.send(b'% ')
+            cmd = self.socket.recv(1024)
+            ret = self.shell.parse(cmd)
+            if len(ret) > 0:
+                self.socket.send(ret.encode())
 
         self.socket.close()
-
-    def cmd_handler(self, cmd):
-        print(cmd)
 
 
 def main():

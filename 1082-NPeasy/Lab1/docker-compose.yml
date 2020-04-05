@@ -1,12 +1,12 @@
 version: '3.1'
 services:
-  mongodb:
-    image: mongo
+  db:
+    image: mariadb
     container_name: bbs_db
+    restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${DB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${DB_ROOT_PWD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PWD} 
     ports:
-      - 27017:27017
+      - 3306:3306
     volumes:
-      - "./data:/data/db"
+      - './data:/var/lib/mysql'
