@@ -7,23 +7,23 @@ Session = sessionmaker()
 
 
 class BBS_DB_BASE:
-    def __init__(self, username, pwd):
-        self.engine = self.get_engine(username, pwd)
+    def __init__(self, host, port, username, pwd):
+        self.engine = self.get_engine(host, port, username, pwd)
         self.create_table(self.engine)
         self.session = Session(bind=self.engine)
 
-    def get_engine(self, username, pwd):
-        engine = create_engine(f"mysql://{username}:{pwd}@127.0.0.1:3306")
+    def get_engine(self, host, port, username, pwd):
+        engine = create_engine(f"mysql://{username}:{pwd}@{host}:{port}")
         engine.execute('CREATE DATABASE IF NOT EXISTS bbs;')
-        return create_engine(f"mysql://{username}:{pwd}@127.0.0.1:3306/bbs")
+        return create_engine(f"mysql://{username}:{pwd}@{host}:{port}/bbs")
 
     def create_table(self, engine):
         Users.__table__.create(bind=engine, checkfirst=True)
 
 
 class BBS_DB(BBS_DB_BASE):
-    def __init__(self, username, pwd):
-        super().__init__(username, pwd)
+    def __init__(self, host, port, username, pwd):
+        super().__init__(host, port, username, pwd)
 
     def create_user(self, username, email, password):
         """

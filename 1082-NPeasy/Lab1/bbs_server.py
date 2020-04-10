@@ -13,13 +13,15 @@ else:
     BBS_PORT = int(os.getenv("BBS_SERVER_DEFAULT_PORT"))
 
 BBS_HOST = os.getenv("BBS_SERVER_IP")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
 DB_USERNAME = os.getenv("DB_ROOT_USERNAME")
 DB_PWD = os.getenv("DB_ROOT_PWD")
 
 
 class Controller():
     def __init__(self):
-        self.db = BBS_DB(DB_USERNAME, DB_PWD)
+        self.db = BBS_DB(DB_HOST, DB_PORT, DB_USERNAME, DB_PWD)
         self.user = None
 
     def execute(self, cmd):
