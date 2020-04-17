@@ -2,6 +2,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from db.users import Users
+from db.boards import Boards
+from db.posts import Posts, PostComments
 
 Session = sessionmaker()
 
@@ -19,6 +21,9 @@ class BBS_DB_BASE:
 
     def create_table(self, engine):
         Users.__table__.create(bind=engine, checkfirst=True)
+        Boards.__table__.create(bind=engine, checkfirst=True)
+        Posts.__table__.create(bind=engine, checkfirst=True)
+        PostComments.__table__.create(bind=engine, checkfirst=True)
 
 
 class BBS_DB(BBS_DB_BASE):
