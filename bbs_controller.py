@@ -1,10 +1,12 @@
 from bbs_db import BBS_DB
 from constant import DB_HOST, DB_PORT, DB_USERNAME, DB_PWD
 
+
 class BBS_Controller():
     def __init__(self):
         self.db = BBS_DB(DB_HOST, DB_PORT, DB_USERNAME, DB_PWD)
         self.user = None
+        self.uid = None
 
     def execute(self, cmd):
         try:
@@ -14,9 +16,8 @@ class BBS_Controller():
 
         if len(cmd) == 0:
             return ""
-        else:
-            cmd_list = cmd.split()
 
+        cmd_list = cmd.split()
         return self.parse(cmd, cmd_list)
 
     def parse(self, cmd, cmd_list):
@@ -47,10 +48,7 @@ class BBS_Controller():
         password = cmd_list[3]
 
         res = self.db.create_user(username, email, password)
-        if res == 0:
-            return "Register successfull.\n"
-        elif res == 1:
-            return "Username is already use.\n"
+        return res.message
 
     def login_handler(self, cmd_list):
         if len(cmd_list) != 3:
@@ -59,26 +57,29 @@ class BBS_Controller():
         username = cmd_list[1]
         password = cmd_list[2]
 
-        if self.user != None:
+        if self.user is not None:
             return "Please logout first.\n"
 
-        res = self.db.login(username, password)
-        if res == 0:
-            self.user = username
-            return f"Welcome, {username}.\n"
-        elif res == 1:
-            return "Login failed.\n"
+        else:
+            res = self.db.login(username, password)
+            if res.success:
+                self.user = username
+                self.uid = res.data['uid']
+            return res.message
 
     def logout_handler(self):
-        if self.user:
-            res = f"Bye, {self.user}.\n"
-            self.user = None
-            return res
-        else:
+        if not self.user:
             return "Please login first.\n"
 
-    def whoami_handler(self):
-        if self.user:
-            return f"{self.user}\n"
         else:
+            res = f"Bye, {self.user}.\n"
+            self.user = None
+            self.uid = None
+            return res
+
+    def whoami_handler(self):
+        if not self.user:
             return "Please login first.\n"
+
+        else:
+            return f"{self.user}\n"

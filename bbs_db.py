@@ -26,20 +26,19 @@ class BBS_DB_BASE:
         PostComments.__table__.create(bind=engine, checkfirst=True)
 
 
-class BBS_DB(BBS_DB_BASE):
-    def __init__(self, host, port, username, pwd):
-        super().__init__(host, port, username, pwd)
+class BBS_DB_Return:
+    def __init__(self, success, message, data=None):
+        self.success = success
+        self.data = data
+        self.message = message + '\n'
 
+
+class BBS_DB(BBS_DB_BASE):
     def create_user(self, username, email, password):
-        """
-        Returns:
-            0: Register successfull
-            1: Username is already use
-        """
-        user = self.session.query(Users).filter_by(
-            username=username).one_or_none()
+        user = self.session.query(Users).filter_by(username=username).one_or_none()
+
         if user:
-            return 1
+            return BBS_DB_Return(False, "Username is already use.")
 
         new_user = Users(
             username=username,
@@ -48,18 +47,12 @@ class BBS_DB(BBS_DB_BASE):
         )
         self.session.add(new_user)
         self.session.commit()
-        return 0
+        return BBS_DB_Return(True, "Register successfull.")
 
     def login(self, username, password):
-        """
-        Returns:
-            0: Successfully login
-            1: Login failed
-        """
-        user = self.session.query(Users).filter_by(
-            username=username).one_or_none()
+        user = self.session.query(Users).filter_by(username=username).one_or_none()
 
         if user is None or user.password != password:
-            return 1
+            return BBS_DB_Return(False, "Login failed.")
         else:
-            return 0
+            return BBS_DB_Return(True, f"Welcome, {username}.", {'uid': user.id})
