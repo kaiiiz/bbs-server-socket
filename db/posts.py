@@ -9,7 +9,6 @@ class Posts(Base):
     __tablename__ = 'posts'
 
     id = Column(BIGINT(), primary_key=True, autoincrement=True)
-    name = Column(VARCHAR(255), nullable=False, unique=True)
     title = Column(TEXT)
     content = Column(TEXT)
 

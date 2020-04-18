@@ -57,15 +57,31 @@ class BBS_DB(BBS_DB_BASE):
         else:
             return BBS_DB_Return(True, f"Welcome, {username}.", {'uid': user.id})
 
-    def create_board(self, boardname):
-        board = self.session.query(Boards).filter_by(name=boardname).one_or_none()
+    def create_board(self, board_name):
+        board = self.session.query(Boards).filter_by(name=board_name).one_or_none()
 
         if board:
             return BBS_DB_Return(False, "Board is already exist.")
 
         new_board = Boards(
-            name=boardname
+            name=board_name
         )
         self.session.add(new_board)
         self.session.commit()
         return BBS_DB_Return(True, "Create board successfully.")
+
+    def create_post(self, uid, board_name, post_title, post_content):
+        board = self.session.query(Boards).filter_by(name=board_name).one_or_none()
+
+        if not board:
+            return BBS_DB_Return(False, "Board is not exist.")
+
+        new_post = Posts(
+            title=post_title,
+            content=post_content,
+            board_id=board.id,
+            user_id=uid
+        )
+        self.session.add(new_post)
+        self.session.commit()
+        return BBS_DB_Return(True, "Create post successfully.")
