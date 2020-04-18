@@ -32,12 +32,28 @@ class BBS_Controller():
 
         elif cmd_list[0] == "whoami":
             return self.whoami_handler()
+        
+        elif cmd_list[0] == "create-board":
+            return self.create_board_handler(cmd_list)
 
         elif cmd_list[0] == "exit":
             return -1
 
         else:
             return f"command not found: {cmd}\n"
+    
+    def create_board_handler(self, cmd_list):
+        if len(cmd_list) != 2:
+            return "Usage: create-board <name>\n"
+        
+        if not self.user:
+            return "Please login first.\n"
+        
+        boardname = cmd_list[1]
+
+        res = self.db.create_board(boardname)
+        return res.message
+
 
     def register_handler(self, cmd_list):
         if len(cmd_list) != 4:
@@ -57,7 +73,7 @@ class BBS_Controller():
         username = cmd_list[1]
         password = cmd_list[2]
 
-        if self.user is not None:
+        if self.user:
             return "Please logout first.\n"
 
         else:

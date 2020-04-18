@@ -56,3 +56,16 @@ class BBS_DB(BBS_DB_BASE):
             return BBS_DB_Return(False, "Login failed.")
         else:
             return BBS_DB_Return(True, f"Welcome, {username}.", {'uid': user.id})
+
+    def create_board(self, boardname):
+        board = self.session.query(Boards).filter_by(name=boardname).one_or_none()
+
+        if board:
+            return BBS_DB_Return(False, "Board is already exist.")
+
+        new_board = Boards(
+            name=boardname
+        )
+        self.session.add(new_board)
+        self.session.commit()
+        return BBS_DB_Return(True, "Create board successfully.")
