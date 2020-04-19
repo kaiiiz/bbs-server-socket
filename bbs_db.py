@@ -5,6 +5,8 @@ from db.users import Users
 from db.boards import Boards
 from db.posts import Posts, PostComments
 
+from constant import DB_HOST, DB_PORT, DB_USERNAME, DB_PWD
+
 Session = sessionmaker()
 
 
@@ -57,14 +59,15 @@ class BBS_DB(BBS_DB_BASE):
         else:
             return BBS_DB_Return(True, f"Welcome, {username}.", {'uid': user.id})
 
-    def create_board(self, board_name):
+    def create_board(self, board_name, uid):
         board = self.session.query(Boards).filter_by(name=board_name).one_or_none()
 
         if board:
             return BBS_DB_Return(False, "Board is already exist.")
 
         new_board = Boards(
-            name=board_name
+            name=board_name,
+            moderator_id=uid,
         )
         self.session.add(new_board)
         self.session.commit()
@@ -85,3 +88,7 @@ class BBS_DB(BBS_DB_BASE):
         self.session.add(new_post)
         self.session.commit()
         return BBS_DB_Return(True, "Create post successfully.")
+
+    def list_board(self, condition):
+        boards = self.session.query(Boards).filter(Boards.name.contains(condition)).all()
+        return BBS_DB_Return(True, "", boards)

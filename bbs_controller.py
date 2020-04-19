@@ -40,11 +40,30 @@ class BBS_Controller():
         elif cmd_list[0] == "create-post":
             return self.create_post_handler(cmd)
 
+        elif cmd_list[0] == "list-board":
+            return self.list_board_handler(cmd)
+
         elif cmd_list[0] == "exit":
             return -1
 
         else:
             return f"command not found: {cmd}\n"
+
+    def list_board_handler(self, cmd):
+        if cmd.strip() == 'list-board':
+            condition = ""
+        else:
+            regex = r'list-board\s+##(.+)'
+            try:
+                condition = re.search(regex, cmd).group(1)
+            except AttributeError:
+                return "Usage: list-board ##<key>\n"
+
+        res = self.db.list_board(condition)
+        message = "\tIndex\t\tName\t\tModerator\n"
+        for b in res.data:
+            message += f"\t{b.id}\t\t{b.name}\t\t{b.moderator.username}\n"
+        return message
 
     def create_post_handler(self, cmd):
         regex = r'(create-post)\s*([^\s]+)\s*--title(.+)--content(.+)'
@@ -71,7 +90,7 @@ class BBS_Controller():
 
         boardname = cmd_list[1]
 
-        res = self.db.create_board(boardname)
+        res = self.db.create_board(boardname, self.uid)
         return res.message
 
     def register_handler(self, cmd_list):
