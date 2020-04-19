@@ -46,11 +46,33 @@ class BBS_Controller():
         elif cmd_list[0] == "list-post":
             return self.list_post_handler(cmd, cmd_list)
 
+        elif cmd_list[0] == "read":
+            return self.read_post_handler(cmd_list)
+
         elif cmd_list[0] == "exit":
             return -1
 
         else:
             return f"command not found: {cmd}\n"
+
+    def read_post_handler(self, cmd_list):
+        if len(cmd_list) != 2:
+            return "Usage: read <post-id>\n"
+
+        post_id = cmd_list[1]
+
+        res = self.db.read_post(post_id)
+
+        def format_meta(field, msg): return f"{field:10}: {msg}\n"
+        message = ""
+        message += format_meta("Author", res.data.author.username)
+        message += format_meta("Title", res.data.title)
+        message += format_meta("Date", res.data.timestamp.strftime(r'%Y-%m-%d'))
+        message += "--\n"
+        message += res.data.content.replace("<br>", "\n") + '\n'
+        message += "--\n"
+        # TODO: Comments
+        return message
 
     def list_post_handler(self, cmd, cmd_list):
         if len(cmd_list) == 2:

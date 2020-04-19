@@ -107,3 +107,11 @@ class BBS_DB(BBS_DB_BASE):
             Posts.title.contains(condition),
         ).all()
         return BBS_DB_Return(True, "", posts)
+
+    def read_post(self, post_id):
+        post = self.session.query(Posts).get(post_id)
+
+        if not post:
+            return BBS_DB_Return(False, "Post is not exist.")
+
+        return BBS_DB_Return(True, "", post)
