@@ -56,7 +56,7 @@ class BBS_Controller():
             return self.update_post_handler(cmd)
 
         elif cmd_list[0] == "comment":
-            return self.comment_handler(cmd_list)
+            return self.comment_handler(cmd)
 
         elif cmd_list[0] == "exit":
             return -1
@@ -64,15 +64,17 @@ class BBS_Controller():
         else:
             return f"command not found: {cmd}\n"
 
-    def comment_handler(self, cmd_list):
-        if len(cmd_list) != 3:
+    def comment_handler(self, cmd):
+        regex = r'comment\s+(\d+)\s+(.+)'
+        try:
+            search = re.search(regex, cmd)
+            post_id = search.group(1)
+            comment = search.group(2)
+        except AttributeError:
             return "Usage: comment <post-id> <comment>\n"
 
         if not self.user:
             return "Please login first.\n"
-
-        post_id = cmd_list[1]
-        comment = cmd_list[2]
 
         res = self.db.comment(post_id, comment, self.uid)
         return res.message
@@ -113,6 +115,9 @@ class BBS_Controller():
 
         res = self.db.read_post(post_id)
 
+        if not res.success:
+            return res.message
+
         def format_meta(field, msg): return f"{field:10}: {msg}\n"
         message = ""
         message += format_meta("Author", res.data.author.username)
@@ -150,7 +155,7 @@ class BBS_Controller():
             def format_msg(id, title, author, date): return f"\t{id:<8}{title:<25.25}{author:<15.15}{date:<10.10}\n"
             message = format_msg("ID", "Title", "Author", "Date")
             for p in res.data:
-                message += format_msg(p.id, p.title, p.author.username, p.timestamp.strftime(r'%m-%d'))
+                message += format_msg(p.id, p.title, p.author.username, p.timestamp.strftime(r'%m/%d'))
             return message
 
     def list_board_handler(self, cmd):
@@ -165,7 +170,7 @@ class BBS_Controller():
 
         res = self.db.list_board(condition)
 
-        def format_msg(index, name, moderator): return f"\t{index:<8}{name:<25.25}{moderator:<15.15}\n"
+        def format_msg(index, name, moderator): return f"\t{index:<10}{name:<20.20}{moderator:<15.15}\n"
         message = format_msg("Index", "Name", "Moderator")
         for b in res.data:
             message += format_msg(b.id, b.name, b.moderator.username)
