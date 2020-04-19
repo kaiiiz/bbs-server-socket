@@ -43,11 +43,42 @@ class BBS_Controller():
         elif cmd_list[0] == "list-board":
             return self.list_board_handler(cmd)
 
+        elif cmd_list[0] == "list-post":
+            return self.list_post_handler(cmd, cmd_list)
+
         elif cmd_list[0] == "exit":
             return -1
 
         else:
             return f"command not found: {cmd}\n"
+
+    def list_post_handler(self, cmd, cmd_list):
+        if len(cmd_list) == 2:
+            condition = ""
+            board_name = cmd_list[1]
+
+        elif len(cmd_list) > 2:
+            regex = r'list-post\s+\S+\s+##(.+)'
+            try:
+                condition = re.search(regex, cmd).group(1)
+                board_name = cmd_list[1]
+            except AttributeError:
+                return "Usage: list-post <board-name> ##<key>\n"
+
+        else:
+            return "Usage: list-post <board-name> ##<key>\n"
+
+        res = self.db.list_post(board_name, condition)
+
+        if not res.success:
+            return res.message
+
+        else:
+            def format_msg(id, title, author, date): return f"\t{id:<8}{title:<25.25}{author:<15.15}{date:<10.10}\n"
+            message = format_msg("ID", "Title", "Author", "Date")
+            for p in res.data:
+                message += format_msg(p.id, p.title, p.author.username, p.timestamp.strftime(r'%m-%d'))
+            return message
 
     def list_board_handler(self, cmd):
         if cmd.strip() == 'list-board':
@@ -60,9 +91,11 @@ class BBS_Controller():
                 return "Usage: list-board ##<key>\n"
 
         res = self.db.list_board(condition)
-        message = "\tIndex\t\tName\t\tModerator\n"
+
+        def format_msg(index, name, moderator): return f"\t{index:<8}{name:<25.25}{moderator:<15.15}\n"
+        message = format_msg("Index", "Name", "Moderator")
         for b in res.data:
-            message += f"\t{b.id}\t\t{b.name}\t\t{b.moderator.username}\n"
+            message += format_msg(b.id, b.name, b.moderator.username)
         return message
 
     def create_post_handler(self, cmd):

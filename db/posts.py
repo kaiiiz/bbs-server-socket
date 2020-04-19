@@ -1,6 +1,6 @@
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.mysql import BIGINT, VARCHAR, TEXT
+from sqlalchemy.dialects.mysql import BIGINT, VARCHAR, TEXT, TIMESTAMP
 
 from .base import Base
 
@@ -11,12 +11,13 @@ class Posts(Base):
     id = Column(BIGINT(), primary_key=True, autoincrement=True)
     title = Column(TEXT)
     content = Column(TEXT)
+    timestamp = Column(TIMESTAMP)
 
     # relation
     board_id = Column(BIGINT(), ForeignKey('boards.id'))
     board = relationship('Boards')
-    user_id = Column(BIGINT(), ForeignKey('users.id'))
-    user = relationship('Users')
+    author_id = Column(BIGINT(), ForeignKey('users.id'))
+    author = relationship('Users')
 
 
 class PostComments(Base):

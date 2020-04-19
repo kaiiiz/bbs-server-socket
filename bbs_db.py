@@ -7,6 +7,8 @@ from db.posts import Posts, PostComments
 
 from constant import DB_HOST, DB_PORT, DB_USERNAME, DB_PWD
 
+from datetime import datetime
+
 Session = sessionmaker()
 
 
@@ -82,8 +84,9 @@ class BBS_DB(BBS_DB_BASE):
         new_post = Posts(
             title=post_title,
             content=post_content,
+            timestamp=datetime.now(),
             board_id=board.id,
-            user_id=uid
+            author_id=uid,
         )
         self.session.add(new_post)
         self.session.commit()
@@ -92,3 +95,15 @@ class BBS_DB(BBS_DB_BASE):
     def list_board(self, condition):
         boards = self.session.query(Boards).filter(Boards.name.contains(condition)).all()
         return BBS_DB_Return(True, "", boards)
+
+    def list_post(self, board_name, condition):
+        board = self.session.query(Boards).filter_by(name=board_name).one_or_none()
+
+        if not board:
+            return BBS_DB_Return(False, "Board is not exist.")
+
+        posts = self.session.query(Posts).join(Boards).filter(
+            Boards.name == board_name,
+            Posts.title.contains(condition),
+        ).all()
+        return BBS_DB_Return(True, "", posts)
