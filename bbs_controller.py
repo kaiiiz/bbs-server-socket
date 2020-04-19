@@ -11,7 +11,7 @@ class BBS_Controller():
 
     def execute(self, cmd):
         try:
-            cmd = cmd.strip().decode()
+            cmd = cmd.decode().strip('\r\n')
         except:
             return ""
 
@@ -153,7 +153,7 @@ class BBS_Controller():
             return res.message
 
         else:
-            def format_msg(id, title, author, date): return f"\t{id:<8}{title:<25.25}{author:<15.15}{date:<10.10}\n"
+            def format_msg(id, title, author, date): return f"{id:<10}{title:<25.25}{author:<15.15}{date:<10.10}\n"
             output = format_msg("ID", "Title", "Author", "Date")
             for p in res.data:
                 output += format_msg(p.id, p.title, p.author.username, p.timestamp.strftime(r'%m/%d'))
@@ -171,7 +171,7 @@ class BBS_Controller():
 
         res = self.db.list_board(condition)
 
-        def format_msg(index, name, moderator): return f"\t{index:<10}{name:<20.20}{moderator:<15.15}\n"
+        def format_msg(index, name, moderator): return f"{index:<10}{name:<25.25}{moderator:<15.15}\n"
         output = format_msg("Index", "Name", "Moderator")
         for b in res.data:
             output += format_msg(b.id, b.name, b.moderator.username)

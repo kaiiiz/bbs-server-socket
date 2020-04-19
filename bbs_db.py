@@ -102,10 +102,11 @@ class BBS_DB(BBS_DB_BASE):
         if not board:
             return BBS_DB_Return(False, "Board is not exist.")
 
-        posts = self.session.query(Posts).join(Boards).filter(
-            Boards.name == board_name,
-            Posts.title.contains(condition),
-        ).all()
+        posts = []
+        for p in board.posts:
+            if condition in p.title:
+                posts.append(p)
+
         return BBS_DB_Return(True, "", posts)
 
     def read_post(self, post_id):
@@ -140,7 +141,6 @@ class BBS_DB(BBS_DB_BASE):
 
         if specifier == "content":
             post.content = value
-
         elif specifier == "title":
             post.title = value
 
