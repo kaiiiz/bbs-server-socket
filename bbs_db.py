@@ -61,7 +61,7 @@ class BBS_DB(BBS_DB_BASE):
         else:
             return BBS_DB_Return(True, f"Welcome, {username}.", {'uid': user.id})
 
-    def create_board(self, board_name, uid):
+    def create_board(self, board_name, cur_uid):
         board = self.session.query(Boards).filter_by(name=board_name).one_or_none()
 
         if board:
@@ -69,13 +69,13 @@ class BBS_DB(BBS_DB_BASE):
 
         new_board = Boards(
             name=board_name,
-            moderator_id=uid,
+            moderator_id=cur_uid,
         )
         self.session.add(new_board)
         self.session.commit()
         return BBS_DB_Return(True, "Create board successfully.")
 
-    def create_post(self, uid, board_name, post_title, post_content):
+    def create_post(self, cur_uid, board_name, post_title, post_content):
         board = self.session.query(Boards).filter_by(name=board_name).one_or_none()
 
         if not board:
@@ -86,7 +86,7 @@ class BBS_DB(BBS_DB_BASE):
             content=post_content,
             timestamp=datetime.now(),
             board_id=board.id,
-            author_id=uid,
+            author_id=cur_uid,
         )
         self.session.add(new_post)
         self.session.commit()
@@ -116,15 +116,32 @@ class BBS_DB(BBS_DB_BASE):
 
         return BBS_DB_Return(True, "", post)
 
-    def delete_post(self, post_id, uid):
+    def delete_post(self, post_id, cur_uid):
         post = self.session.query(Posts).get(post_id)
 
         if not post:
             return BBS_DB_Return(False, "Post is not exist.")
 
-        if post.author.id != uid:
+        if post.author.id != cur_uid:
             return BBS_DB_Return(False, "Not the post owner.")
 
         self.session.delete(post)
         self.session.commit()
         return BBS_DB_Return(True, "Delete successfully.")
+
+    def update_post(self, post_id, specifier, value, cur_uid):
+        post = self.session.query(Posts).get(post_id)
+
+        if not post:
+            return BBS_DB_Return(False, "Post is not exist.")
+
+        if post.author.id != cur_uid:
+            return BBS_DB_Return(False, "Not the post owner.")
+
+        if specifier == "content":
+            post.content = value
+
+        elif specifier == "title":
+            post.title = value
+
+        return BBS_DB_Return(True, "Update successfully.")

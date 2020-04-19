@@ -52,11 +52,30 @@ class BBS_Controller():
         elif cmd_list[0] == "delete-post":
             return self.delete_post_handler(cmd_list)
 
+        elif cmd_list[0] == "update-post":
+            return self.update_post_handler(cmd)
+
         elif cmd_list[0] == "exit":
             return -1
 
         else:
             return f"command not found: {cmd}\n"
+
+    def update_post_handler(self, cmd):
+        regex = r'(update-post)\s+(\d+)\s+--(title|content)\s+(.+)'
+        try:
+            search = re.search(regex, cmd)
+            post_id = search.group(2)
+            specifier = search.group(3)
+            value = search.group(4)
+        except AttributeError:
+            return "Usage: update-post <post-id> --title/content <new>\n"
+
+        if not self.user:
+            return "Please login first.\n"
+
+        res = self.db.update_post(post_id, specifier, value, self.uid)
+        return res.message
 
     def delete_post_handler(self, cmd_list):
         if len(cmd_list) != 2:
