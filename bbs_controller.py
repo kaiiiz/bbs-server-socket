@@ -49,11 +49,26 @@ class BBS_Controller():
         elif cmd_list[0] == "read":
             return self.read_post_handler(cmd_list)
 
+        elif cmd_list[0] == "delete-post":
+            return self.delete_post_handler(cmd_list)
+
         elif cmd_list[0] == "exit":
             return -1
 
         else:
             return f"command not found: {cmd}\n"
+
+    def delete_post_handler(self, cmd_list):
+        if len(cmd_list) != 2:
+            return "Usage: delete-post <post-id>\n"
+
+        if not self.user:
+            return "Please login first.\n"
+
+        post_id = cmd_list[1]
+
+        res = self.db.delete_post(post_id, self.uid)
+        return res.message
 
     def read_post_handler(self, cmd_list):
         if len(cmd_list) != 2:

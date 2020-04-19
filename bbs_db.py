@@ -115,3 +115,16 @@ class BBS_DB(BBS_DB_BASE):
             return BBS_DB_Return(False, "Post is not exist.")
 
         return BBS_DB_Return(True, "", post)
+
+    def delete_post(self, post_id, uid):
+        post = self.session.query(Posts).get(post_id)
+
+        if not post:
+            return BBS_DB_Return(False, "Post is not exist.")
+
+        if post.author.id != uid:
+            return BBS_DB_Return(False, "Not the post owner.")
+
+        self.session.delete(post)
+        self.session.commit()
+        return BBS_DB_Return(True, "Delete successfully.")
