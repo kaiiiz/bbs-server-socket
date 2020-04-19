@@ -118,16 +118,16 @@ class BBS_Controller():
         if not res.success:
             return res.message
 
-        def format_meta(field, msg): return f"{field:10}: {msg}\n"
+        def format_meta(field, msg): return f"\t{field:10}: {msg}\n"
         output = ""
         output += format_meta("Author", res.data.author.username)
         output += format_meta("Title", res.data.title)
         output += format_meta("Date", res.data.timestamp.strftime(r'%Y-%m-%d'))
-        output += "--\n"
-        output += res.data.content.replace("<br>", "\n") + '\n'
-        output += "--\n"
+        output += "\t--\n"
+        output += "\t" + res.data.content.replace("<br>", "\n\t") + '\n'
+        output += "\t--\n"
         for c in res.data.comments:
-            output += f"{c.user.username}: {c.content}\n"
+            output += f"\t{c.user.username}: {c.content}\n"
         return output
 
     def list_post_handler(self, cmd, cmd_list):
@@ -153,7 +153,7 @@ class BBS_Controller():
             return res.message
 
         else:
-            def format_msg(id, title, author, date): return f"{id:<10}{title:<25.25}{author:<15.15}{date:<10.10}\n"
+            def format_msg(id, title, author, date): return f"\t{id:<10}{title:<25.25}{author:<15.15}{date:<10.10}\n"
             output = format_msg("ID", "Title", "Author", "Date")
             for p in res.data:
                 output += format_msg(p.id, p.title, p.author.username, p.timestamp.strftime(r'%m/%d'))
@@ -171,7 +171,7 @@ class BBS_Controller():
 
         res = self.db.list_board(condition)
 
-        def format_msg(index, name, moderator): return f"{index:<10}{name:<25.25}{moderator:<15.15}\n"
+        def format_msg(index, name, moderator): return f"\t{index:<10}{name:<25.25}{moderator:<15.15}\n"
         output = format_msg("Index", "Name", "Moderator")
         for b in res.data:
             output += format_msg(b.id, b.name, b.moderator.username)
