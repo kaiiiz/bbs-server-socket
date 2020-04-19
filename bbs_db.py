@@ -144,6 +144,7 @@ class BBS_DB(BBS_DB_BASE):
         elif specifier == "title":
             post.title = value
 
+        self.session.commit()
         return BBS_DB_Return(True, "Update successfully.")
 
     def comment(self, post_id, comment_content, cur_uid):

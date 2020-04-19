@@ -119,16 +119,16 @@ class BBS_Controller():
             return res.message
 
         def format_meta(field, msg): return f"{field:10}: {msg}\n"
-        message = ""
-        message += format_meta("Author", res.data.author.username)
-        message += format_meta("Title", res.data.title)
-        message += format_meta("Date", res.data.timestamp.strftime(r'%Y-%m-%d'))
-        message += "--\n"
-        message += res.data.content.replace("<br>", "\n") + '\n'
-        message += "--\n"
+        output = ""
+        output += format_meta("Author", res.data.author.username)
+        output += format_meta("Title", res.data.title)
+        output += format_meta("Date", res.data.timestamp.strftime(r'%Y-%m-%d'))
+        output += "--\n"
+        output += res.data.content.replace("<br>", "\n") + '\n'
+        output += "--\n"
         for c in res.data.comments:
-            message += f"{c.user.username}: {c.content}\n"
-        return message
+            output += f"{c.user.username}: {c.content}\n"
+        return output
 
     def list_post_handler(self, cmd, cmd_list):
         if len(cmd_list) == 2:
@@ -136,10 +136,11 @@ class BBS_Controller():
             board_name = cmd_list[1]
 
         elif len(cmd_list) > 2:
-            regex = r'list-post\s+\S+\s+##(.+)'
+            regex = r'list-post\s+(\S+)\s+##(.+)'
             try:
-                condition = re.search(regex, cmd).group(1)
-                board_name = cmd_list[1]
+                search = re.search(regex, cmd)
+                board_name = search.group(1)
+                condition = search.group(2)
             except AttributeError:
                 return "Usage: list-post <board-name> ##<key>\n"
 
@@ -153,10 +154,10 @@ class BBS_Controller():
 
         else:
             def format_msg(id, title, author, date): return f"\t{id:<8}{title:<25.25}{author:<15.15}{date:<10.10}\n"
-            message = format_msg("ID", "Title", "Author", "Date")
+            output = format_msg("ID", "Title", "Author", "Date")
             for p in res.data:
-                message += format_msg(p.id, p.title, p.author.username, p.timestamp.strftime(r'%m/%d'))
-            return message
+                output += format_msg(p.id, p.title, p.author.username, p.timestamp.strftime(r'%m/%d'))
+            return output
 
     def list_board_handler(self, cmd):
         if cmd.strip() == 'list-board':
@@ -171,10 +172,10 @@ class BBS_Controller():
         res = self.db.list_board(condition)
 
         def format_msg(index, name, moderator): return f"\t{index:<10}{name:<20.20}{moderator:<15.15}\n"
-        message = format_msg("Index", "Name", "Moderator")
+        output = format_msg("Index", "Name", "Moderator")
         for b in res.data:
-            message += format_msg(b.id, b.name, b.moderator.username)
-        return message
+            output += format_msg(b.id, b.name, b.moderator.username)
+        return output
 
     def create_post_handler(self, cmd):
         regex = r'(create-post)\s+(\S+)\s+--title\s+(.+)\s+--content\s+(.+)'
