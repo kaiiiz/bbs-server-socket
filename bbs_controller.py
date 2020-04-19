@@ -55,11 +55,27 @@ class BBS_Controller():
         elif cmd_list[0] == "update-post":
             return self.update_post_handler(cmd)
 
+        elif cmd_list[0] == "comment":
+            return self.comment_handler(cmd_list)
+
         elif cmd_list[0] == "exit":
             return -1
 
         else:
             return f"command not found: {cmd}\n"
+
+    def comment_handler(self, cmd_list):
+        if len(cmd_list) != 3:
+            return "Usage: comment <post-id> <comment>\n"
+
+        if not self.user:
+            return "Please login first.\n"
+
+        post_id = cmd_list[1]
+        comment = cmd_list[2]
+
+        res = self.db.comment(post_id, comment, self.uid)
+        return res.message
 
     def update_post_handler(self, cmd):
         regex = r'(update-post)\s+(\d+)\s+--(title|content)\s+(.+)'
@@ -105,7 +121,8 @@ class BBS_Controller():
         message += "--\n"
         message += res.data.content.replace("<br>", "\n") + '\n'
         message += "--\n"
-        # TODO: Comments
+        for c in res.data.comments:
+            message += f"{c.user.username}: {c.content}\n"
         return message
 
     def list_post_handler(self, cmd, cmd_list):

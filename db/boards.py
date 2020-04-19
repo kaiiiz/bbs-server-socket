@@ -11,6 +11,8 @@ class Boards(Base):
     id = Column(BIGINT(), primary_key=True, autoincrement=True)
     name = Column(VARCHAR(255), nullable=False, unique=True)
 
-    # relation
+    # 1-N relationship
+    posts = relationship('Posts', backref='board')
+
+    # FK
     moderator_id = Column(BIGINT(), ForeignKey('users.id'))
-    moderator = relationship('Users')

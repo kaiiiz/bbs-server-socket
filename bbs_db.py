@@ -145,3 +145,18 @@ class BBS_DB(BBS_DB_BASE):
             post.title = value
 
         return BBS_DB_Return(True, "Update successfully.")
+
+    def comment(self, post_id, comment_content, cur_uid):
+        post = self.session.query(Posts).get(post_id)
+
+        if not post:
+            return BBS_DB_Return(False, "Post is not exist.")
+
+        new_comment = PostComments(
+            content=comment_content,
+            post_id=post_id,
+            user_id=cur_uid,
+        )
+        self.session.add(new_comment)
+        self.session.commit()
+        return BBS_DB_Return(True, "Comment successfully.")
