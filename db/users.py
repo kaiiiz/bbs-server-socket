@@ -13,6 +13,6 @@ class Users(Base):
     password = Column(VARCHAR(255), nullable=False)
 
     # 1-N relationship
-    posts = relationship('Posts', backref="author")
-    comments = relationship('PostComments', backref="user")
-    boards = relationship('Boards', backref="moderator")
+    posts = relationship('Posts', cascade="all,delete", backref="author")
+    comments = relationship('PostComments', cascade="all,delete", backref="user")
+    boards = relationship('Boards', cascade="all,delete", backref="moderator")

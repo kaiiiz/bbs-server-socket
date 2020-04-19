@@ -14,11 +14,11 @@ class Posts(Base):
     timestamp = Column(TIMESTAMP)
 
     # 1-N relationship
-    comments = relationship('PostComments', backref='post')
+    comments = relationship('PostComments', cascade="all,delete", backref='post')
 
     # FK
-    board_id = Column(BIGINT(), ForeignKey('boards.id'))
-    author_id = Column(BIGINT(), ForeignKey('users.id'))
+    board_id = Column(BIGINT(), ForeignKey('boards.id'), nullable=False)
+    author_id = Column(BIGINT(), ForeignKey('users.id'), nullable=False)
 
 
 class PostComments(Base):
@@ -28,5 +28,5 @@ class PostComments(Base):
     content = Column(TEXT)
 
     # FK
-    post_id = Column(BIGINT(), ForeignKey('posts.id'))
-    user_id = Column(BIGINT(), ForeignKey('users.id'))
+    post_id = Column(BIGINT(), ForeignKey('posts.id'), nullable=False)
+    user_id = Column(BIGINT(), ForeignKey('users.id'), nullable=False)

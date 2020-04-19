@@ -12,7 +12,7 @@ class Boards(Base):
     name = Column(VARCHAR(255), nullable=False, unique=True)
 
     # 1-N relationship
-    posts = relationship('Posts', backref='board')
+    posts = relationship('Posts', cascade="all,delete", backref='board')
 
     # FK
-    moderator_id = Column(BIGINT(), ForeignKey('users.id'))
+    moderator_id = Column(BIGINT(), ForeignKey('users.id'), nullable=False)
