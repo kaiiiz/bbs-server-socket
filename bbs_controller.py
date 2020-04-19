@@ -136,7 +136,7 @@ class BBS_Controller():
         return message
 
     def create_post_handler(self, cmd):
-        regex = r'(create-post)\s*([^\s]+)\s*--title(.+)--content(.+)'
+        regex = r'(create-post)\s+(\S+)\s+--title\s+(.+)\s+--content\s+(.+)'
         try:
             search = re.search(regex, cmd)
             board_name = search.group(2)
