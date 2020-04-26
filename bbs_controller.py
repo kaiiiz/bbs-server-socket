@@ -152,12 +152,19 @@ class BBS_Controller():
         if not res.success:
             return res.message
 
-        else:
-            def format_msg(id, title, author, date): return f"\t{id:<10}{title:<25.25}{author:<15.15}{date:<10.10}\n"
-            output = format_msg("ID", "Title", "Author", "Date")
-            for p in res.data:
-                output += format_msg(p.id, p.title, p.author.username, p.timestamp.strftime(r'%m/%d'))
-            return output
+        max_title_len = 5  # len("Title")
+        max_author_len = 6  # len("Author")
+        for p in res.data:
+            max_title_len = max(max_title_len, len(p.title))
+            max_author_len = max(max_author_len, len(p.author.username))
+
+        def format_msg(id, title, author, date):
+            return f"\t{id:<10}{title:<{max_title_len + 5}}{author:<{max_author_len + 5}}{date}\n"
+
+        output = format_msg("ID", "Title", "Author", "Date")
+        for p in res.data:
+            output += format_msg(p.id, p.title, p.author.username, p.timestamp.strftime(r'%m/%d'))
+        return output
 
     def list_board_handler(self, cmd):
         if cmd.strip() == 'list-board':
@@ -171,7 +178,13 @@ class BBS_Controller():
 
         res = self.db.list_board(condition)
 
-        def format_msg(index, name, moderator): return f"\t{index:<10}{name:<25.25}{moderator:<15.15}\n"
+        max_name_len = 4  # len("Name")
+        for b in res.data:
+            max_name_len = max(max_name_len, len(b.name))
+
+        def format_msg(index, name, moderator):
+            return f"\t{index:<10}{name:<{max_name_len + 5}}{moderator}\n"
+
         output = format_msg("Index", "Name", "Moderator")
         for b in res.data:
             output += format_msg(b.id, b.name, b.moderator.username)
