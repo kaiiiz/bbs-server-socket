@@ -11,7 +11,7 @@ class BBS_Controller():
 
     def execute(self, cmd):
         try:
-            cmd = cmd.decode().strip('\r\n')
+            cmd = cmd.decode().strip()
         except:
             return ""
 
@@ -120,14 +120,14 @@ class BBS_Controller():
 
         def format_meta(field, msg): return f"\t{field:10}: {msg}\n"
         output = ""
-        output += format_meta("Author", res.data.author.username)
-        output += format_meta("Title", res.data.title)
-        output += format_meta("Date", res.data.timestamp.strftime(r'%Y-%m-%d'))
+        output += format_meta("Author", res.data['author'])
+        output += format_meta("Title", res.data['title'])
+        output += format_meta("Date", res.data['timestamp'].strftime(r'%Y-%m-%d'))
         output += "\t--\n"
-        output += "\t" + res.data.content.replace("<br>", "\n\t") + '\n'
+        output += "\t" + res.data['content'].replace("<br>", "\n\t") + '\n'
         output += "\t--\n"
-        for c in res.data.comments:
-            output += f"\t{c.user.username}: {c.content}\n"
+        for c in res.data['comments']:
+            output += f"\t{c['user']}: {c['content']}\n"
         return output
 
     def list_post_handler(self, cmd, cmd_list):
@@ -155,15 +155,15 @@ class BBS_Controller():
         max_title_len = 5  # len("Title")
         max_author_len = 6  # len("Author")
         for p in res.data:
-            max_title_len = max(max_title_len, len(p.title))
-            max_author_len = max(max_author_len, len(p.author.username))
+            max_title_len = max(max_title_len, len(p['title']))
+            max_author_len = max(max_author_len, len(p['author']))
 
         def format_msg(id, title, author, date):
             return f"\t{id:<10}{title:<{max_title_len + 5}}{author:<{max_author_len + 5}}{date}\n"
 
         output = format_msg("ID", "Title", "Author", "Date")
         for p in res.data:
-            output += format_msg(p.id, p.title, p.author.username, p.timestamp.strftime(r'%m/%d'))
+            output += format_msg(p['id'], p['title'], p['author'], p['timestamp'].strftime(r'%m/%d'))
         return output
 
     def list_board_handler(self, cmd):
@@ -180,14 +180,14 @@ class BBS_Controller():
 
         max_name_len = 4  # len("Name")
         for b in res.data:
-            max_name_len = max(max_name_len, len(b.name))
+            max_name_len = max(max_name_len, len(b['name']))
 
         def format_msg(index, name, moderator):
             return f"\t{index:<10}{name:<{max_name_len + 5}}{moderator}\n"
 
         output = format_msg("Index", "Name", "Moderator")
         for b in res.data:
-            output += format_msg(b.id, b.name, b.moderator.username)
+            output += format_msg(b['id'], b['name'], b['moderator'])
         return output
 
     def create_post_handler(self, cmd):
