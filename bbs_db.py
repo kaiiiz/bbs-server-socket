@@ -1,6 +1,6 @@
 from db.users import Users
 from db.boards import Boards
-from db.posts import Posts, PostComments
+from db.posts import Posts
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker

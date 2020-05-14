@@ -1,6 +1,7 @@
 from db.users import Users
 from db.boards import Boards
-from db.posts import Posts, PostComments
+from db.posts import Posts
+from db.mails import Mails
 
 from sqlalchemy import create_engine
 
@@ -17,4 +18,4 @@ class SCHEMA_CREATOR:
         Users.__table__.create(bind=self.engine, checkfirst=True)
         Boards.__table__.create(bind=self.engine, checkfirst=True)
         Posts.__table__.create(bind=self.engine, checkfirst=True)
-        PostComments.__table__.create(bind=self.engine, checkfirst=True)
+        Mails.__table__.create(bind=self.engine, checkfirst=True)
