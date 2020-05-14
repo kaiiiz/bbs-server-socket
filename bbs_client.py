@@ -30,7 +30,38 @@ class BBS_Client_Socket(threading.Thread, metaclass=ABCMeta):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((HOST, PORT))
 
-    def socket_protector(func):
+    def run(self):
+        welcome_msg = self.socket.recv(1024).decode()
+        print(welcome_msg, end='')
+        self.alive.set()
+
+        while self.alive.is_set():
+            try:
+                cmd = self.cmd_q.get(block=True, timeout=0.1)
+                res = self.execute(cmd)
+                self.reply_q.put(res)
+
+            except queue.Empty:
+                self.check_connection()
+                continue
+
+        self.socket.close()
+        os.kill(os.getpid(), signal.SIGINT)
+
+    @abstractmethod
+    def check_connection(self):
+        pass
+
+    @abstractmethod
+    def execute(self, cmd):
+        pass
+
+
+class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
+    def __init__(self, cmd_q, reply_q, alive):
+        BBS_Client_Socket.__init__(self, cmd_q, reply_q, alive)
+
+    def socket_err_handler(func):
         def wrapped_func(self, *args, **kwargs):
             try:
                 return func(self, *args, **kwargs)
@@ -49,33 +80,11 @@ class BBS_Client_Socket(threading.Thread, metaclass=ABCMeta):
 
         return wrapped_func
 
-    def run(self):
-        welcome_msg = self.socket.recv(1024).decode()
-        print(welcome_msg, end='')
-        self.alive.set()
+    @socket_err_handler
+    def check_connection(self):
+        self.socket.send(b" ")
 
-        while self.alive.is_set():
-            try:
-                cmd = self.cmd_q.get(block=True, timeout=0.1)
-                res = self.execute(cmd)
-                self.reply_q.put(res)
-
-            except queue.Empty:
-                # self.check_connection()
-                continue
-
-        self.socket.close()
-        os.kill(os.getpid(), signal.SIGINT)
-
-    @abstractmethod
-    def execute(self, cmd):
-        pass
-
-
-class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
-    def __init__(self, cmd_q, reply_q, alive):
-        BBS_Client_Socket.__init__(self, cmd_q, reply_q, alive)
-
+    @socket_err_handler
     def execute(self, cmd):
         self.socket.send(cmd.encode())
         return self.socket.recv(1024).decode()
@@ -93,9 +102,10 @@ def main():
         while True:
             if alive.is_set():  # after welcome message
                 cmd = input('% ')
-                cmd_q.put(cmd)
-                res = reply_q.get()
-                print(res, end='')
+                if len(cmd.strip()) > 0:
+                    cmd_q.put(cmd)
+                    res = reply_q.get()
+                    print(res, end='')
     except:
         pass
 

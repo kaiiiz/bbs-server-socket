@@ -21,8 +21,11 @@ class BBS_Server_Socket(threading.Thread, metaclass=ABCMeta):
         self.socket.send(welcome_msg)
 
         while True:
-            cmd = self.socket.recv(1024)
-            self.execute(cmd)
+            cmd = self.socket.recv(1024).decode()
+            if cmd == " ":  # client check connection
+                pass
+            else:
+                self.execute(cmd)
 
         self.socket.close()
 
@@ -40,7 +43,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
 
     def execute(self, cmd):
         try:
-            cmd = cmd.decode().strip('\r\n')
+            cmd = cmd.strip('\r\n')
             cmd_type, parse_status, cmd_list = self.parse(cmd)
         except:
             self.socket.send(f"command not found: {cmd}\n".encode())
