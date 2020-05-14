@@ -17,12 +17,10 @@ class BBS_Server_Socket(threading.Thread, metaclass=ABCMeta):
 
     def run(self):
         print(f"New Connection.")
-        self.socket.send(b"********************************\n")
-        self.socket.send(b"** Welcome to the BBS server. **\n")
-        self.socket.send(b"********************************\n")
+        welcome_msg = b"********************************\n** Welcome to the BBS server. **\n********************************\n"
+        self.socket.send(welcome_msg)
 
         while True:
-            self.socket.send(b"% ")
             cmd = self.socket.recv(1024)
             self.execute(cmd)
 
