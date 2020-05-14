@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from datetime import datetime
+from dataclasses import asdict
 
 
 class BBS_DB_BASE:
@@ -13,6 +14,64 @@ class BBS_DB_BASE:
         engine = create_engine(f"mysql://{username}:{pwd}@{host}:{port}/bbs")
         session_factory = sessionmaker(bind=engine)
         self.scoped_session_factory = scoped_session(session_factory)
+
+
+class BBS_DB_API(BBS_DB_BASE):
+    def save_transaction(func):
+        def wrapper(self, *args, **kwargs):
+            self.session = self.scoped_session_factory()  # Thread-local session
+            try:
+                return func(self, *args, **kwargs)
+            except:
+                self.session.rollback()
+                raise
+            finally:
+                self.session.close()
+        return wrapper
+
+    @save_transaction
+    def create(self, model, data):
+        row = model(**data)
+        self.session.add(row)
+        self.session.commit()
+        return asdict(row)
+
+    @save_transaction
+    def get(self, model, id):
+        row = self.session.query(model).get(id)
+        return asdict(row)
+
+    @save_transaction
+    def get_filter(self, model, filter):
+        rows = self.session.query(model).filter(filter).all()
+        for idx, r in enumerate(rows):
+            rows[idx] = asdict(r)
+        return rows
+
+    @save_transaction
+    def update(self, model, id, data):
+        row = self.session.query(model).get(id)
+        for k, v in data.items():
+            setattr(row, k, v)
+        self.session.commit()
+        return asdict(row)
+
+    @save_transaction
+    def update_filter(self, model, filter, data):
+        rows = self.session.query(model).filter(filter).all()
+        for idx, r in enumerate(rows):
+            for k, v in data.items():
+                setattr(r, k, v)
+            rows[idx] = asdict(r)
+        self.session.commit()
+        return rows
+
+    @save_transaction
+    def delete(self, model, id):
+        row = self.session.query(model).get(id)
+        self.session.delete(row)
+        self.session.commit()
+        return None
 
 
 class BBS_DB_Return:
