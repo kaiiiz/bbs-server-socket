@@ -172,3 +172,59 @@ class BBS_Command_Parser(threading.Thread):
             raise Exception("Parse Error: Command not found!")
 
         return cmd_type, parse_status, tuple(parse_list)
+
+    def usage(cmd_type):
+
+        if cmd_type == "register":
+            return "Usage: register <username> <email> <password>"
+
+        elif cmd_type == "login":
+            return "Usage: login <username> <password>"
+
+        elif cmd_type == "logout":
+            return "Usage: logout"
+
+        elif cmd_type == "whoami":
+            return "Usage: whoami"
+
+        elif cmd_type == "create-board":
+            return "Usage: create-board <name>"
+
+        elif cmd_type == "create-post":
+            return "Usage: create-post <board-name> --title <title> --content <content>"
+
+        elif cmd_type == "list-board":
+            return "Usage: list-board ##<key>"
+
+        elif cmd_type == "list-post":
+            return "Usage: list-post <board-name> ##<key>"
+
+        elif cmd_type == "read":
+            return "Usage: read <post-id>"
+
+        elif cmd_type == "delete-post":
+            return "Usage: delete-post <post-id>"
+
+        elif cmd_type == "update-post":
+            return "Usage: update-post <post-id> --title/content <new>"
+
+        elif cmd_type == "comment":
+            return "Usage: comment <post-id> <comment>"
+
+        elif cmd_type == "mail-to":
+            return "Usage: mail-to <username> --subject <subject> --content <content>"
+
+        elif cmd_type == "list-mail":
+            return "Usage: list-mail"
+
+        elif cmd_type == "retr-mail":
+            return "Usage: retr-mail <mail#>"
+
+        elif cmd_type == "delete-mail":
+            return "Usage: delete-mail <mail#>"
+
+        elif cmd_type == "exit":
+            return "Usage: exit"
+
+        else:
+            raise Exception("Parse Error: Command not found!")
