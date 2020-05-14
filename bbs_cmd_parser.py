@@ -2,7 +2,7 @@ import threading
 import re
 
 
-class BBS_Command_Parser(threading.Thread):
+class BBS_Command_Parser:
     def parse(self, cmd):
         try:
             cmd = cmd.strip()
@@ -173,8 +173,7 @@ class BBS_Command_Parser(threading.Thread):
 
         return cmd_type, parse_status, tuple(parse_list)
 
-    def usage(cmd_type):
-
+    def usage(self, cmd_type):
         if cmd_type == "register":
             return "Usage: register <username> <email> <password>"
 
