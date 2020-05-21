@@ -138,10 +138,21 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         self.socket.sendall(bucket_name.encode())
 
     def logout_handler(self):
-        print('logout')
+        if not self.username:
+            self.socket.sendall(b"Please login first.")
+
+        else:
+            res = f"Bye, {self.username}."
+            self.username = None
+            self.uid = None
+            self.socket.sendall(res.encode())
 
     def whoami_handler(self):
-        print('whoami')
+        if not self.username:
+            self.socket.sendall(b"Please login first.")
+
+        else:
+            self.socket.sendall(self.username.encode())
 
     def create_board_handler(self, board_name):
         if self.db.check_board_exist(board_name):

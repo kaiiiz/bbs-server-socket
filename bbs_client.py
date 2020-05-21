@@ -182,10 +182,10 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         return f"Welcome, {username}.\n"
 
     def logout_handler(self):
-        print('logout')
+        return self.socket.recv(1024).decode() + '\n'
 
     def whoami_handler(self):
-        print('whoami')
+        return self.socket.recv(1024).decode() + '\n'
 
     def create_board_handler(self, board_name):
         valid_check = self.socket.recv(1024).decode()
