@@ -319,7 +319,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
 
         mails = self.db.list_mail(self.uid)
         mail_idx = int(mail_id) - 1 # 1-based id
-        if mail_idx > len(mails) or mail_idx < 0:
+        if mail_idx >= len(mails) or mail_idx < 0:
             self.socket.sendall(b"Mail doesn't exist.")
             return
 
@@ -332,7 +332,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
 
         mails = self.db.list_mail(self.uid)
         mail_idx = int(mail_id) - 1 # 1-based id
-        if mail_idx > len(mails) or mail_idx < 0:
+        if mail_idx >= len(mails) or mail_idx < 0:
             self.socket.sendall(b"Mail doesn't exist.")
             return
 

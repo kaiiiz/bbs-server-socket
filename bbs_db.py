@@ -202,8 +202,8 @@ class BBS_DB(BBS_DB_API):
 
     @save_transaction
     def check_user_exist(self, username):
-        user = self.get_filter(Users, Users.username == username)[0]
-        if user:
+        users = self.get_filter(Users, Users.username == username)
+        if len(users) != 0:
             return True
         return False
 

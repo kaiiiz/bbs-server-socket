@@ -7,7 +7,8 @@ import queue
 import os
 import signal
 import boto3
-import uuid
+import string
+import random
 import json
 
 from abc import ABCMeta, abstractmethod
@@ -20,6 +21,18 @@ args = parser.parse_args()
 
 HOST = args.host
 PORT = int(args.port)
+
+def gen_random_bucker_name(prefix):
+    prefix = prefix.replace(" ", "-").replace("_", "-")
+    fill_size = 62 - len(prefix)
+    suffix = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(fill_size)])
+    return (prefix + '.' + suffix).lower()
+
+def gen_random_name(prefix):
+    prefix = prefix.replace(" ", "_")
+    fill_size = 62 - len(prefix)
+    suffix = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(fill_size)])
+    return prefix + '.' + suffix
 
 
 class BBS_Client_Socket(threading.Thread, metaclass=ABCMeta):
@@ -164,7 +177,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
             return "User is already used.\n"
 
         # valid username, create bucket
-        bucket_name = str(uuid.uuid4())
+        bucket_name = gen_random_bucker_name(f"bbs.client.{username}")
         self.s3.create_bucket(Bucket=bucket_name)
 
         # store metadata
@@ -180,8 +193,8 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
 
         self.my_username = username
         # retrieve bucket name from server
-        bucket_name = valid_check
-        self.bucket = self.s3.Bucket(bucket_name)
+        self.bucket_name = valid_check
+        self.bucket = self.s3.Bucket(self.bucket_name)
         return f"Welcome, {username}.\n"
 
     def logout_handler(self):
@@ -203,7 +216,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         valid_check = self.socket.recv(1024).decode()
         if valid_check == "Client doesn't log in.":
             return "Please login first.\n"
-        if valid_check == "Board doesn't exist.":
+        if valid_check == "Board is not exist.":
             return "Board is not exist.\n"
 
         tmp_file = f"./tmp"
@@ -214,7 +227,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         with open(tmp_file, "w") as tmp:
             tmp.write(json.dumps(post_obj))
 
-        post_obj_name = str(uuid.uuid4())
+        post_obj_name = gen_random_name(f"bbs.post.{title}")
         self.bucket.upload_file(tmp_file, post_obj_name)
         os.remove(tmp_file)
 
@@ -329,7 +342,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         receiver_bucket_name = valid_check
         receiver_bucker = self.s3.Bucket(receiver_bucket_name)
 
-        mail_obj_name = str(uuid.uuid4())
+        mail_obj_name = gen_random_name(f"bbs.mail.{subject}")
 
         tmp_file = f"./tmp"
         with open(tmp_file, "w") as tmp:
