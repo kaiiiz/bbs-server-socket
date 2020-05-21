@@ -200,7 +200,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         if valid_check == "Client doesn't log in.":
             return "Please login first.\n"
         if valid_check == "Board doesn't exist.":
-            return "Board does not exist.\n"
+            return "Board is not exist.\n"
 
         tmp_file = f"./tmp/{title}"
         os.makedirs(os.path.dirname(tmp_file), exist_ok=True)
@@ -219,7 +219,10 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         return self.socket.recv(1024).decode()
 
     def list_post_handler(self, board_name, condition):
-        print(board_name, condition)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Board doesn't exist.":
+            return "Board is not exist.\n"
+        return valid_check
 
     def read_post_handler(self, post_id):
         print(post_id)

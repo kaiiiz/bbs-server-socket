@@ -184,12 +184,29 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
 
         output = format_msg("Index", "Name", "Moderator")
         for b in boards:
-            moderator = self.db.get_username(b['moderator_id'])
-            output += format_msg(b['id'], b['name'], moderator)
+            output += format_msg(b['id'], b['name'], b['moderator'])
         self.socket.sendall(output.encode())
 
     def list_post_handler(self, board_name, condition):
-        print(board_name, condition)
+        if not self.db.check_board_exist(board_name):
+            self.socket.sendall(b"Board doesn't exist.")
+            return
+
+        posts = self.db.list_post(board_name, condition)
+
+        max_title_len = 5  # len("Title")
+        max_author_len = 6  # len("Author")
+        for p in posts:
+            max_title_len = max(max_title_len, len(p['title']))
+            max_author_len = max(max_author_len, len(p['author']))
+
+        def format_msg(id, title, author, date):
+            return f"\t{id:<10}{title:<{max_title_len + 5}}{author:<{max_author_len + 5}}{date}\n"
+
+        output = format_msg("ID", "Title", "Author", "Date")
+        for p in posts:
+            output += format_msg(p['id'], p['title'], p['author'], p['timestamp'].strftime(r'%m/%d'))
+        self.socket.sendall(output.encode())
 
     def read_post_handler(self, post_id):
         print(post_id)

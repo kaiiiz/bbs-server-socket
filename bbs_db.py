@@ -18,6 +18,45 @@ class BBS_DB_BASE:
 
 
 class BBS_DB_API(BBS_DB_BASE):
+    def create(self, model, data):
+        row = model(**data)
+        self.session.add(row)
+        self.session.commit()
+        return row
+
+    def get(self, model, id):
+        return self.session.query(model).get(id)
+
+    def get_filter(self, model, filter):
+        return self.session.query(model).filter(filter).all()
+
+    def update(self, model, id, data):
+        row = self.session.query(model).get(id)
+        for k, v in data.items():
+            setattr(row, k, v)
+        self.session.commit()
+        return row
+
+    def update_filter(self, model, filter, data):
+        rows = self.session.query(model).filter(filter).all()
+        for idx, r in enumerate(rows):
+            for k, v in data.items():
+                setattr(r, k, v)
+            rows[idx] = asdict(r)
+        self.session.commit()
+        return rows
+
+    def delete(self, model, id):
+        row = self.session.query(model).get(id)
+        self.session.delete(row)
+        self.session.commit()
+        return None
+
+
+class BBS_DB(BBS_DB_API):
+    def __init__(self, host, port, username, pwd):
+        super().__init__(host, port, username, pwd)
+
     def save_transaction(func):
         def wrapper(self, *args, **kwargs):
             self.session = self.scoped_session_factory()  # Thread-local session
@@ -31,63 +70,16 @@ class BBS_DB_API(BBS_DB_BASE):
         return wrapper
 
     @save_transaction
-    def create(self, model, data):
-        row = model(**data)
-        self.session.add(row)
-        self.session.commit()
-        return asdict(row)
-
-    @save_transaction
-    def get(self, model, id):
-        row = self.session.query(model).get(id)
-        return asdict(row)
-
-    @save_transaction
-    def get_filter(self, model, filter):
-        rows = self.session.query(model).filter(filter).all()
-        for idx, r in enumerate(rows):
-            rows[idx] = asdict(r)
-        return rows
-
-    @save_transaction
-    def update(self, model, id, data):
-        row = self.session.query(model).get(id)
-        for k, v in data.items():
-            setattr(row, k, v)
-        self.session.commit()
-        return asdict(row)
-
-    @save_transaction
-    def update_filter(self, model, filter, data):
-        rows = self.session.query(model).filter(filter).all()
-        for idx, r in enumerate(rows):
-            for k, v in data.items():
-                setattr(r, k, v)
-            rows[idx] = asdict(r)
-        self.session.commit()
-        return rows
-
-    @save_transaction
-    def delete(self, model, id):
-        row = self.session.query(model).get(id)
-        self.session.delete(row)
-        self.session.commit()
-        return None
-
-
-class BBS_DB(BBS_DB_API):
-    def __init__(self, host, port, username, pwd):
-        super().__init__(host, port, username, pwd)
-
     def check_username_valid(self, username):
         users = self.get_filter(Users, Users.username == username)
         if len(users) > 0:
             return False
         return True
 
+    @save_transaction
     def create_user(self, username, email, password, bucket_name):
         try:
-            new_user = self.create(Users, {
+            self.create(Users, {
                 'username': username,
                 'email': email,
                 'password': password,
@@ -97,28 +89,28 @@ class BBS_DB(BBS_DB_API):
         except:
             return False
 
+    @save_transaction
     def login(self, username, password):
-        users = self.get_filter(Users, Users.username == username)
-        if len(users) != 1 or users[0]['password'] != password:
+        users = self.get_filter(Users, Users.username == username)[0]
+        if users.password != password:
             return False, None
-        return True, users[0]['id']
+        return True, users.id
 
+    @save_transaction
     def get_bucket_name(self, uid):
         user = self.get(Users, uid)
-        return user['bucket_name']
+        return user.bucket_name
 
+    @save_transaction
     def check_board_exist(self, board_name):
         boards = self.get_filter(Boards, Boards.name == board_name)
         if len(boards) == 0:
             return False
         return True
 
-    def get_board_id(self, board_name):
-        boards = self.get_filter(Boards, Boards.name == board_name)
-        return boards[0]['id']
-
+    @save_transaction
     def create_post(self, uid, board_name, title, post_obj_name):
-        board_id = self.get_board_id(board_name)
+        board_id = self.get_filter(Boards, Boards.name == board_name)[0].id
         try:
             self.create(Posts, {
                 'title': title,
@@ -131,6 +123,7 @@ class BBS_DB(BBS_DB_API):
         except:
             return False
 
+    @save_transaction
     def create_board(self, uid, board_name):
         try:
             self.create(Boards, {
@@ -141,13 +134,36 @@ class BBS_DB(BBS_DB_API):
         except:
             return False
 
+    @save_transaction
     def list_board(self, condition):
         if condition == None:
             condition = ""
-        return self.get_filter(Boards, Boards.name.contains(condition))
 
-    def get_username(self, uid):
-        return self.get(Users, uid)['username']
+        boards_rows = self.get_filter(Boards, Boards.name.contains(condition))
+        boards = []
+        for idx, br in enumerate(boards_rows):
+            b = asdict(br)
+            b['moderator'] = br.moderator.username
+            boards.append(b)
+        return boards
+
+    @save_transaction
+    def list_post(self, board_name, condition):
+        board = self.get_filter(Boards, Boards.name == board_name)[0]
+
+        if condition == None:
+            condition = ""
+
+        posts = []
+        for p in board.posts:
+            if condition in p.title:
+                posts.append({
+                    'id': p.id,
+                    'title': p.title,
+                    'author': p.author.username,
+                    'timestamp': p.timestamp,
+                })
+        return posts
 
 
 # class BBS_DB_Return:

@@ -16,4 +16,4 @@ class Boards(Base):
     posts: list = relationship('Posts', cascade="all,delete", backref='board')
 
     # FK
-    moderator_id: int = Column(BIGINT(), ForeignKey('users.id'), nullable=False)
+    moderator_id = Column(BIGINT(), ForeignKey('users.id'), nullable=False)
