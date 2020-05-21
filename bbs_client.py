@@ -65,6 +65,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         BBS_Client_Socket.__init__(self, cmd_q, reply_q, alive)
         self.s3 = boto3.resource("s3")
         self.bucket = None
+        self.my_username = None
 
     def socket_err_handler(func):
         def wrapped_func(self, *args, **kwargs):
@@ -177,12 +178,14 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         if valid_check == "Username or password is incorrect.":
             return "Login failed.\n"
 
+        self.my_username = username
         # retrieve bucket name from server
         bucket_name = valid_check
         self.bucket = self.s3.Bucket(bucket_name)
         return f"Welcome, {username}.\n"
 
     def logout_handler(self):
+        self.my_username = None
         return self.socket.recv(1024).decode() + '\n'
 
     def whoami_handler(self):
@@ -206,7 +209,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         tmp_file = f"./tmp"
         post_obj = {
             "content": content,
-            "comments": "",
+            "comments": [],
         }
         with open(tmp_file, "w") as tmp:
             tmp.write(json.dumps(post_obj))
@@ -291,7 +294,30 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         return "Update successfully.\n"
 
     def comment_handler(self, post_id, comment):
-        print(post_id, comment)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        if valid_check == "Post does not exist.":
+            return "Post does not exist.\n"
+
+        post_meta = json.loads(valid_check)
+        post_owner_bucket_name = post_meta["bucket_name"]
+        post_obj_name = post_meta["post_obj_name"]
+
+        post_owner_bucket = self.s3.Bucket(post_owner_bucket_name)
+        post_obj = json.loads(post_owner_bucket.Object(post_obj_name).get()['Body'].read().decode())
+        post_obj["comments"].append({
+            "user": self.my_username,
+            "content": comment,
+        })
+
+        tmp_file = f"./tmp"
+        with open(tmp_file, "w") as tmp:
+            tmp.write(json.dumps(post_obj))
+        post_owner_bucket.upload_file(tmp_file, post_obj_name)
+        os.remove(tmp_file)
+
+        return "Comment successfully.\n"
 
     def mail_to_handler(self, username, subject, content):
         print(username, subject, content)

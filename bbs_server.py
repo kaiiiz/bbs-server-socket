@@ -263,7 +263,15 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
             self.socket.sendall(b"Update successfully.")
 
     def comment_handler(self, post_id, comment):
-        print(post_id, comment)
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+        if not self.db.check_post_exist(post_id):
+            self.socket.sendall(b"Post does not exist.")
+            return
+
+        post_meta = self.db.get_post_meta(post_id)
+        self.socket.sendall(json.dumps(post_meta).encode())
 
     def mail_to_handler(self, username, subject, content):
         print(username, subject, content)
