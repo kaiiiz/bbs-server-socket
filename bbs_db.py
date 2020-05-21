@@ -229,6 +229,7 @@ class BBS_DB(BBS_DB_API):
 
         for m in user.receive_mails:
             mail_meta.append({
+                "id": m.id,
                 "subject": m.subject,
                 "from": m.sender.username,
                 "date": m.timestamp.strftime(r'%m/%d'),
@@ -236,6 +237,10 @@ class BBS_DB(BBS_DB_API):
             })
 
         return mail_meta
+
+    @save_transaction
+    def delete_mail(self, mail_id):
+        self.delete(Mails, mail_id)
 
 # class BBS_DB_Return:
 #     def __init__(self, success, message, data=None):

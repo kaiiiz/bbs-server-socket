@@ -368,7 +368,16 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         return output
 
     def delete_mail_handler(self, mail_id):
-        print(mail_id)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        if valid_check == "Mail doesn't exist.":
+            return f"No such mail.\n"
+
+        mail_obj_name = valid_check
+        mail_obj = self.bucket.Object(mail_obj_name)
+        mail_obj.delete()
+        return "Delete successfully.\n"
 
     def exit_handler(self):
         self.alive.clear()

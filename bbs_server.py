@@ -326,10 +326,22 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         self.socket.sendall(json.dumps(mails[mail_idx]).encode())
 
     def delete_mail_handler(self, mail_id):
-        print(mail_id)
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+
+        mails = self.db.list_mail(self.uid)
+        mail_idx = int(mail_id) - 1 # 1-based id
+        if mail_idx > len(mails) or mail_idx < 0:
+            self.socket.sendall(b"Mail doesn't exist.")
+            return
+
+        mail_meta = mails[mail_idx]
+        self.db.delete_mail(mail_meta['id'])
+        self.socket.sendall(mail_meta['mail_obj_name'].encode())
 
     def exit_handler(self):
-        print('exit')
+        print('client exit')
 
 
 def main():
