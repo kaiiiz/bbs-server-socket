@@ -216,7 +216,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         return self.socket.recv(1024).decode() + '\n'
 
     def list_board_handler(self, condition):
-        print(condition)
+        return self.socket.recv(1024).decode()
 
     def list_post_handler(self, board_name, condition):
         print(board_name, condition)

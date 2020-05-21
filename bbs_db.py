@@ -141,6 +141,14 @@ class BBS_DB(BBS_DB_API):
         except:
             return False
 
+    def list_board(self, condition):
+        if condition == None:
+            condition = ""
+        return self.get_filter(Boards, Boards.name.contains(condition))
+
+    def get_username(self, uid):
+        return self.get(Users, uid)['username']
+
 
 # class BBS_DB_Return:
 #     def __init__(self, success, message, data=None):

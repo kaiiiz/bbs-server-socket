@@ -172,9 +172,21 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         else:
             self.socket.sendall(b"Create post failed.")
 
-
     def list_board_handler(self, condition):
-        print(condition)
+        boards = self.db.list_board(condition)
+
+        max_name_len = 4  # len("Name")
+        for b in boards:
+            max_name_len = max(max_name_len, len(b['name']))
+
+        def format_msg(index, name, moderator):
+            return f"\t{index:<10}{name:<{max_name_len + 5}}{moderator}\n"
+
+        output = format_msg("Index", "Name", "Moderator")
+        for b in boards:
+            moderator = self.db.get_username(b['moderator_id'])
+            output += format_msg(b['id'], b['name'], moderator)
+        self.socket.sendall(output.encode())
 
     def list_post_handler(self, board_name, condition):
         print(board_name, condition)
