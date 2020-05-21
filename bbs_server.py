@@ -4,6 +4,7 @@ import socket
 import threading
 import os
 import sys
+import json
 
 from abc import ABCMeta, abstractmethod
 from bbs_cmd_parser import BBS_Command_Parser
@@ -220,21 +221,27 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         self.socket.sendall(output.encode())
 
     def read_post_handler(self, post_id):
-        print(post_id)
+        if not self.db.check_post_exist(post_id):
+            self.socket.sendall(b"Post does not exist.")
+            return
+
+        post_meta = self.db.get_post_meta(post_id)
+        self.socket.sendall(json.dumps(post_meta).encode())
 
     def delete_post_handler(self, post_id):
         if not self.username:
-            self.socket.sendall(b"Please login first.")
+            self.socket.sendall(b"Client doesn't log in.")
             return
         if not self.db.check_post_exist(post_id):
-            self.socket.sendall(b"Post is not exist.")
+            self.socket.sendall(b"Post does not exist.")
             return
         if not self.db.check_is_post_owner(post_id, self.uid):
             self.socket.sendall(b"Not the post owner.")
             return
 
+        post_meta = self.db.get_post_meta(post_id)
         self.db.delete_post(post_id)
-        self.socket.sendall(b"Delete successfully.")
+        self.socket.sendall(post_meta['post_obj_name'].encode())
 
     def update_post_handler(self, post_id, specifier, value):
         print(post_id, specifier, value)

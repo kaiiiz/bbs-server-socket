@@ -8,6 +8,7 @@ import os
 import signal
 import boto3
 import uuid
+import json
 
 from abc import ABCMeta, abstractmethod
 from bbs_cmd_parser import BBS_Command_Parser
@@ -204,8 +205,12 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
 
         tmp_file = f"./tmp/{title}"
         os.makedirs(os.path.dirname(tmp_file), exist_ok=True)
+        post_obj = {
+            "content": content,
+            "comments": "",
+        }
         with open(tmp_file, "w") as tmp:
-            tmp.write(content)
+            tmp.write(json.dumps(post_obj))
 
         post_obj_name = str(uuid.uuid4())
         self.bucket.upload_file(tmp_file, post_obj_name)
@@ -225,10 +230,44 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         return valid_check
 
     def read_post_handler(self, post_id):
-        print(post_id)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Post does not exist.":
+            return "Post does not exist.\n"
+
+        post_meta = json.loads(valid_check)
+        post_owner_bucket_name = post_meta["bucket_name"]
+        post_obj_name = post_meta["post_obj_name"]
+
+        post_owner_bucket = self.s3.Bucket(post_owner_bucket_name)
+        post_obj = json.loads(post_owner_bucket.Object(post_obj_name).get()['Body'].read().decode())
+        post_content = post_obj['content']
+        post_comments = post_obj['comments']
+
+        def format_meta(field, msg): return f"\t{field:10}: {msg}\n"
+        output = ""
+        output += format_meta("Author", post_meta['author'])
+        output += format_meta("Title", post_meta['title'])
+        output += format_meta("Date", post_meta['date'])
+        output += "\t--\n"
+        output += "\t" + post_content.replace("<br>", "\n\t") + '\n'
+        output += "\t--\n"
+        for c in post_comments:
+            output += f"\t{c['user']}: {c['content']}\n"
+        return output
 
     def delete_post_handler(self, post_id):
-        return self.socket.recv(1024).decode() + '\n'
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        if valid_check == "Post does not exist.":
+            return "Post does not exist.\n"
+        if valid_check == "Not the post owner.":
+            return "Not the post owner.\n"
+
+        post_obj_name = valid_check
+        post_obj = self.bucket.Object(post_obj_name)
+        post_obj.delete()
+        return "Delete successfully.\n"
 
     def update_post_handler(self, post_id, specifier, value):
         print(post_id, specifier, value)

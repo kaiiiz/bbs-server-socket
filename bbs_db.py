@@ -183,6 +183,16 @@ class BBS_DB(BBS_DB_API):
     def delete_post(self, post_id):
         self.delete(Posts, post_id)
 
+    @save_transaction
+    def get_post_meta(self, post_id):
+        post = self.get(Posts, post_id)
+        return {
+            "title": post.title,
+            "date": post.timestamp.strftime(r'%Y-%m-%d'),
+            "author": post.author.username,
+            "bucket_name": post.author.bucket_name,
+            "post_obj_name": post.object_name,
+        }
 
 # class BBS_DB_Return:
 #     def __init__(self, success, message, data=None):
