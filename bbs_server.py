@@ -108,7 +108,18 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
             self.exit_handler()
 
     def register_handler(self, username, email, password):
-        print(username, email, password)
+        valid = self.db.check_username_valid(username)
+        if valid:
+            self.socket.sendall(b"Valid username.")
+        else:
+            self.socket.sendall(b"User is already used.")
+            return
+
+        bucket_name = self.socket.recv(1024).decode()
+        if self.db.create_user(username, email, password, bucket_name):
+            self.socket.sendall(b"Register successfully.")
+        else:
+            self.socket.send(b"Register failed.")
 
     def login_handler(self, username, password):
         print(username, password)

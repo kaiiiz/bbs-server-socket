@@ -6,6 +6,8 @@ import argparse
 import queue
 import os
 import signal
+import boto3
+import uuid
 
 from abc import ABCMeta, abstractmethod
 from bbs_cmd_parser import BBS_Command_Parser
@@ -60,6 +62,7 @@ class BBS_Client_Socket(threading.Thread, metaclass=ABCMeta):
 class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
     def __init__(self, cmd_q, reply_q, alive):
         BBS_Client_Socket.__init__(self, cmd_q, reply_q, alive)
+        self.s3 = boto3.resource("s3")
 
     def socket_err_handler(func):
         def wrapped_func(self, *args, **kwargs):
@@ -87,7 +90,132 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
     @socket_err_handler
     def execute(self, cmd):
         self.socket.send(cmd.encode())
-        return self.socket.recv(1024).decode()
+
+        try:
+            cmd = cmd.strip('\r\n')
+            cmd_type, parse_status, cmd_list = self.parse(cmd)
+        except:
+            return self.socket.recv(1024).decode()
+
+        if not parse_status:
+            return self.socket.recv(1024).decode()
+
+        # dispatch handler
+        if cmd_type == "register":
+            return self.register_handler(username=cmd_list[1], email=cmd_list[2], password=cmd_list[3])
+
+        elif cmd_type == "login":
+            return self.login_handler(username=cmd_list[1], password=cmd_list[2])
+
+        elif cmd_type == "logout":
+            return self.logout_handler()
+
+        elif cmd_type == "whoami":
+            return self.whoami_handler()
+
+        elif cmd_type == "create-board":
+            return self.create_board_handler(board_name=cmd_list[1])
+
+        elif cmd_type == "create-post":
+            return self.create_post_handler(board_name=cmd_list[1], title=cmd_list[2], content=cmd_list[3])
+
+        elif cmd_type == "list-board":
+            condition = None if len(cmd_list) == 1 else cmd_list[1]
+            return self.list_board_handler(condition=condition)
+
+        elif cmd_type == "list-post":
+            condition = None if len(cmd_list) == 2 else cmd_list[2]
+            return self.list_post_handler(board_name=cmd_list[1], condition=condition)
+
+        elif cmd_type == "read":
+            return self.read_post_handler(post_id=cmd_list[1])
+
+        elif cmd_type == "delete-post":
+            return self.delete_post_handler(post_id=cmd_list[1])
+
+        elif cmd_type == "update-post":
+            return self.update_post_handler(post_id=cmd_list[1], specifier=cmd_list[2], value=cmd_list[3])
+
+        elif cmd_type == "comment":
+            return self.comment_handler(post_id=cmd_list[1], comment=cmd_list[2])
+
+        elif cmd_type == "mail-to":
+            return self.mail_to_handler(username=cmd_list[1], subject=cmd_list[2], content=cmd_list[3])
+
+        elif cmd_type == "list-mail":
+            return self.list_mail_handler()
+
+        elif cmd_type == "retr-mail":
+            return self.retr_mail_handler(mail_id=cmd_list[1])
+
+        elif cmd_type == "delete-mail":
+            return self.delete_mail_handler(mail_id=cmd_list[1])
+
+        elif cmd_type == "exit":
+            return self.exit_handler()
+
+
+    def register_handler(self, username, email, password):
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "User is already used.":
+            return "User is already used.\n"
+
+        # valid username, create bucket
+        bucket_name = str(uuid.uuid4())
+        self.s3.create_bucket(Bucket=bucket_name)
+
+        # store metadata
+        self.socket.sendall(bucket_name.encode())
+        return self.socket.recv(1024).decode() + '\n'
+
+    def login_handler(self, username, password):
+        print(username, password)
+
+    def logout_handler(self):
+        print('logout')
+
+    def whoami_handler(self):
+        print('whoami')
+
+    def create_board_handler(self, board_name):
+        print(board_name)
+
+    def create_post_handler(self, board_name, title, content):
+        print(board_name, title, content)
+
+    def list_board_handler(self, condition):
+        print(condition)
+
+    def list_post_handler(self, board_name, condition):
+        print(board_name, condition)
+
+    def read_post_handler(self, post_id):
+        print(post_id)
+
+    def delete_post_handler(self, post_id):
+        print(post_id)
+
+    def update_post_handler(self, post_id, specifier, value):
+        print(post_id, specifier, value)
+
+    def comment_handler(self, post_id, comment):
+        print(post_id, comment)
+
+    def mail_to_handler(self, username, subject, content):
+        print(username, subject, content)
+
+    def list_mail_handler(self):
+        print('list-mail')
+
+    def retr_mail_handler(self, mail_id):
+        print(mail_id)
+
+    def delete_mail_handler(self, mail_id):
+        print(mail_id)
+
+    def exit_handler(self):
+        self.alive.clear()
+        return "Good Bye!\n"
 
 
 def main():
