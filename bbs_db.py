@@ -165,6 +165,24 @@ class BBS_DB(BBS_DB_API):
                 })
         return posts
 
+    @save_transaction
+    def check_post_exist(self, post_id):
+        post = self.get(Posts, post_id)
+        if post:
+            return True
+        return False
+
+    @save_transaction
+    def check_is_post_owner(self, post_id, uid):
+        post = self.get(Posts, post_id)
+        if post.author.id != uid:
+            return False
+        return True
+
+    @save_transaction
+    def delete_post(self, post_id):
+        self.delete(Posts, post_id)
+
 
 # class BBS_DB_Return:
 #     def __init__(self, success, message, data=None):

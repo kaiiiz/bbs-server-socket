@@ -228,7 +228,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         print(post_id)
 
     def delete_post_handler(self, post_id):
-        print(post_id)
+        return self.socket.recv(1024).decode() + '\n'
 
     def update_post_handler(self, post_id, specifier, value):
         print(post_id, specifier, value)
