@@ -203,8 +203,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         if valid_check == "Board doesn't exist.":
             return "Board is not exist.\n"
 
-        tmp_file = f"./tmp/{title}"
-        os.makedirs(os.path.dirname(tmp_file), exist_ok=True)
+        tmp_file = f"./tmp"
         post_obj = {
             "content": content,
             "comments": "",
@@ -270,7 +269,26 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         return "Delete successfully.\n"
 
     def update_post_handler(self, post_id, specifier, value):
-        print(post_id, specifier, value)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        if valid_check == "Post does not exist.":
+            return "Post does not exist.\n"
+        if valid_check == "Not the post owner.":
+            return "Not the post owner.\n"
+
+        if specifier == "content":
+            post_obj_name = valid_check
+            post_obj = json.loads(self.bucket.Object(post_obj_name).get()['Body'].read().decode())
+            post_obj['content'] = value
+
+            tmp_file = f"./tmp"
+            with open(tmp_file, "w") as tmp:
+                tmp.write(json.dumps(post_obj))
+            self.bucket.upload_file(tmp_file, post_obj_name)
+            os.remove(tmp_file)
+
+        return "Update successfully.\n"
 
     def comment_handler(self, post_id, comment):
         print(post_id, comment)

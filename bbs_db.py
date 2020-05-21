@@ -194,6 +194,12 @@ class BBS_DB(BBS_DB_API):
             "post_obj_name": post.object_name,
         }
 
+    @save_transaction
+    def update_post_title(self, post_id, title):
+        self.update(Posts, post_id, {
+            "title": title,
+        })
+
 # class BBS_DB_Return:
 #     def __init__(self, success, message, data=None):
 #         self.success = success

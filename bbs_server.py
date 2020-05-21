@@ -244,7 +244,23 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         self.socket.sendall(post_meta['post_obj_name'].encode())
 
     def update_post_handler(self, post_id, specifier, value):
-        print(post_id, specifier, value)
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+        if not self.db.check_post_exist(post_id):
+            self.socket.sendall(b"Post does not exist.")
+            return
+        if not self.db.check_is_post_owner(post_id, self.uid):
+            self.socket.sendall(b"Not the post owner.")
+            return
+
+        if specifier == "content":
+            post_obj_name = self.db.get_post_meta(post_id)['post_obj_name']
+            self.socket.sendall(post_obj_name.encode())
+
+        elif specifier == "title":
+            self.db.update_post_title(post_id, value)
+            self.socket.sendall(b"Update successfully.")
 
     def comment_handler(self, post_id, comment):
         print(post_id, comment)
