@@ -143,7 +143,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
             return self.comment_handler(post_id=cmd_list[1], comment=cmd_list[2])
 
         elif cmd_type == "mail-to":
-            return self.mail_to_handler(username=cmd_list[1], subject=cmd_list[2], content=cmd_list[3])
+            return self.mail_to_handler(receiver=cmd_list[1], subject=cmd_list[2], content=cmd_list[3])
 
         elif cmd_type == "list-mail":
             return self.list_mail_handler()
@@ -319,11 +319,33 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
 
         return "Comment successfully.\n"
 
-    def mail_to_handler(self, username, subject, content):
-        print(username, subject, content)
+    def mail_to_handler(self, receiver, subject, content):
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        if valid_check == "Receiver doesn't exist.":
+            return f"{receiver} does not exist.\n"
+
+        receiver_bucket_name = valid_check
+        receiver_bucker = self.s3.Bucket(receiver_bucket_name)
+
+        mail_obj_name = str(uuid.uuid4())
+
+        tmp_file = f"./tmp"
+        with open(tmp_file, "w") as tmp:
+            tmp.write(content)
+        receiver_bucker.upload_file(tmp_file, mail_obj_name)
+        os.remove(tmp_file)
+
+        self.socket.send(mail_obj_name.encode())
+        return self.socket.recv(1024).decode() + '\n'
 
     def list_mail_handler(self):
-        print('list-mail')
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+
+        return valid_check
 
     def retr_mail_handler(self, mail_id):
         print(mail_id)

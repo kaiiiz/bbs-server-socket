@@ -91,14 +91,14 @@ class BBS_DB(BBS_DB_API):
 
     @save_transaction
     def login(self, username, password):
-        users = self.get_filter(Users, Users.username == username)[0]
-        if users.password != password:
+        user = self.get_filter(Users, Users.username == username)[0]
+        if user.password != password:
             return False, None
-        return True, users.id
+        return True, user.id
 
     @save_transaction
-    def get_bucket_name(self, uid):
-        user = self.get(Users, uid)
+    def get_bucket_name(self, username):
+        user = self.get_filter(Users, Users.username == username)[0]
         return user.bucket_name
 
     @save_transaction
@@ -161,7 +161,7 @@ class BBS_DB(BBS_DB_API):
                     'id': p.id,
                     'title': p.title,
                     'author': p.author.username,
-                    'timestamp': p.timestamp,
+                    'date': p.timestamp.strftime(r'%m/%d'),
                 })
         return posts
 
@@ -199,6 +199,42 @@ class BBS_DB(BBS_DB_API):
         self.update(Posts, post_id, {
             "title": title,
         })
+
+    @save_transaction
+    def check_user_exist(self, username):
+        user = self.get_filter(Users, Users.username == username)[0]
+        if user:
+            return True
+        return False
+
+    @save_transaction
+    def create_mail(self, subject, receiver_name, sender_id, mail_obj_name):
+        receiver_id = self.get_filter(Users, Users.username == receiver_name)[0].id
+        try:
+            self.create(Mails, {
+                "subject": subject,
+                "object_name": mail_obj_name,
+                "receiver_id": receiver_id,
+                "sender_id": sender_id,
+                "timestamp": datetime.now(),
+            })
+            return True
+        except:
+            return False
+
+    @save_transaction
+    def list_mail(self, uid):
+        user = self.get(Users, uid)
+        mail_meta = []
+
+        for m in user.receive_mails:
+            mail_meta.append({
+                "subject": m.subject,
+                "from": m.sender.username,
+                "date": m.timestamp.strftime(r'%m/%d'),
+            })
+
+        return mail_meta
 
 # class BBS_DB_Return:
 #     def __init__(self, success, message, data=None):

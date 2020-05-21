@@ -94,7 +94,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
             self.comment_handler(post_id=cmd_list[1], comment=cmd_list[2])
 
         elif cmd_type == "mail-to":
-            self.mail_to_handler(username=cmd_list[1], subject=cmd_list[2], content=cmd_list[3])
+            self.mail_to_handler(receiver=cmd_list[1], subject=cmd_list[2], content=cmd_list[3])
 
         elif cmd_type == "list-mail":
             self.list_mail_handler()
@@ -120,7 +120,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         if self.db.create_user(username, email, password, bucket_name):
             self.socket.sendall(b"Register successfully.")
         else:
-            self.socket.send(b"Register failed.")
+            self.socket.send(b"Create user meta failed.")
 
     def login_handler(self, username, password):
         if self.username:
@@ -135,7 +135,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         self.username = username
         self.uid = uid
 
-        bucket_name = self.db.get_bucket_name(uid)
+        bucket_name = self.db.get_bucket_name(username)
         self.socket.sendall(bucket_name.encode())
 
     def logout_handler(self):
@@ -182,7 +182,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         if self.db.create_post(self.uid, board_name, title, post_obj_name):
             self.socket.sendall(b"Create post successfully.")
         else:
-            self.socket.sendall(b"Create post failed.")
+            self.socket.sendall(b"Create post meta failed.")
 
     def list_board_handler(self, condition):
         boards = self.db.list_board(condition)
@@ -217,7 +217,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
 
         output = format_msg("ID", "Title", "Author", "Date")
         for p in posts:
-            output += format_msg(p['id'], p['title'], p['author'], p['timestamp'].strftime(r'%m/%d'))
+            output += format_msg(p['id'], p['title'], p['author'], p['date'])
         self.socket.sendall(output.encode())
 
     def read_post_handler(self, post_id):
@@ -273,11 +273,44 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         post_meta = self.db.get_post_meta(post_id)
         self.socket.sendall(json.dumps(post_meta).encode())
 
-    def mail_to_handler(self, username, subject, content):
-        print(username, subject, content)
+    def mail_to_handler(self, receiver, subject, content):
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+        if not self.db.check_user_exist(receiver):
+            self.socket.sendall(b"Receiver doesn't exist.")
+            return
+
+        receiver_bucket_name = self.db.get_bucket_name(receiver)
+        self.socket.sendall(receiver_bucket_name.encode())
+
+        mail_obj_name = self.socket.recv(1024).decode()
+
+        if self.db.create_mail(subject, receiver, self.uid, mail_obj_name):
+            self.socket.sendall(b"Sent successfully.")
+        else:
+            self.socket.send(b"Create mail meta failed.")
 
     def list_mail_handler(self):
-        print('list-mail')
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+
+        mails = self.db.list_mail(self.uid)
+
+        max_subject_len = 7  # len("Subject")
+        max_sender_len = 4  # len("From")
+        for m in mails:
+            max_subject_len = max(max_subject_len, len(m['subject']))
+            max_sender_len = max(max_sender_len, len(m['from']))
+
+        def format_msg(id, subject, sender, date):
+            return f"\t{id:<10}{subject:<{max_subject_len + 5}}{sender:<{max_sender_len + 5}}{date}\n"
+
+        output = format_msg("ID", "Subject", "From", "Date")
+        for idx, m in enumerate(mails, start=1):
+            output += format_msg(idx, m['subject'], m['from'], m['date'])
+        self.socket.sendall(output.encode())
 
     def retr_mail_handler(self, mail_id):
         print(mail_id)
