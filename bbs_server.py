@@ -122,7 +122,20 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
             self.socket.send(b"Register failed.")
 
     def login_handler(self, username, password):
-        print(username, password)
+        if self.username:
+            self.socket.sendall(b"Client already logged in.")
+            return
+
+        valid, uid = self.db.login(username, password)
+        if not valid:
+            self.socket.sendall(b"Username or password is incorrect.")
+            return
+
+        self.username = username
+        self.uid = uid
+
+        bucket_name = self.db.get_bucket_name(uid)
+        self.socket.sendall(bucket_name.encode())
 
     def logout_handler(self):
         print('logout')

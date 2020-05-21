@@ -97,6 +97,16 @@ class BBS_DB(BBS_DB_API):
         except:
             return False
 
+    def login(self, username, password):
+        users = self.get_filter(Users, Users.username == username)
+        if len(users) != 1 or users[0]['password'] != password:
+            return False, None
+        return True, users[0]['id']
+
+    def get_bucket_name(self, uid):
+        user = self.get(Users, uid)
+        return user['bucket_name']
+
 
 # class BBS_DB_Return:
 #     def __init__(self, success, message, data=None):

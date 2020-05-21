@@ -63,6 +63,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
     def __init__(self, cmd_q, reply_q, alive):
         BBS_Client_Socket.__init__(self, cmd_q, reply_q, alive)
         self.s3 = boto3.resource("s3")
+        self.bucket = None
 
     def socket_err_handler(func):
         def wrapped_func(self, *args, **kwargs):
@@ -169,7 +170,16 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         return self.socket.recv(1024).decode() + '\n'
 
     def login_handler(self, username, password):
-        print(username, password)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client already logged in.":
+            return "Please logout first.\n"
+        if valid_check == "Username or password is incorrect.":
+            return "Login failed.\n"
+
+        # retrieve bucket name from server
+        bucket_name = valid_check
+        self.bucket = self.s3.Bucket(bucket_name)
+        return f"Welcome, {username}.\n"
 
     def logout_handler(self):
         print('logout')
