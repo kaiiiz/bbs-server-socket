@@ -188,10 +188,32 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         print('whoami')
 
     def create_board_handler(self, board_name):
-        print(board_name)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        if valid_check == "Board is already exist.":
+            return "Board is already exist.\n"
+        return valid_check + '\n'
 
     def create_post_handler(self, board_name, title, content):
-        print(board_name, title, content)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        if valid_check == "Board doesn't exist.":
+            return "Board does not exist.\n"
+
+        tmp_file = f"./tmp/{title}"
+        os.makedirs(os.path.dirname(tmp_file), exist_ok=True)
+        with open(tmp_file, "w") as tmp:
+            tmp.write(content)
+
+        post_obj_name = str(uuid.uuid4())
+        self.bucket.upload_file(tmp_file, post_obj_name)
+        os.remove(tmp_file)
+
+        # store metadata of post
+        self.socket.sendall(post_obj_name.encode())
+        return self.socket.recv(1024).decode() + '\n'
 
     def list_board_handler(self, condition):
         print(condition)

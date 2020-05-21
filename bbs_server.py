@@ -144,10 +144,34 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         print('whoami')
 
     def create_board_handler(self, board_name):
-        print(board_name)
+        if self.db.check_board_exist(board_name):
+            self.socket.sendall(b"Board is already exist.")
+            return
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+
+        if self.db.create_board(self.uid, board_name):
+            self.socket.sendall(b"Create board successfully.")
+        else:
+            self.socket.sendall(b"Create board failed.")
 
     def create_post_handler(self, board_name, title, content):
-        print(board_name, title, content)
+        if not self.db.check_board_exist(board_name):
+            self.socket.sendall(b"Board doesn't exist.")
+            return
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+
+        self.socket.sendall(b"Valid action.")
+
+        post_obj_name = self.socket.recv(1024).decode()
+        if self.db.create_post(self.uid, board_name, title, post_obj_name):
+            self.socket.sendall(b"Create post successfully.")
+        else:
+            self.socket.sendall(b"Create post failed.")
+
 
     def list_board_handler(self, condition):
         print(condition)

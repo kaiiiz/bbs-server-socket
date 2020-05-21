@@ -107,6 +107,40 @@ class BBS_DB(BBS_DB_API):
         user = self.get(Users, uid)
         return user['bucket_name']
 
+    def check_board_exist(self, board_name):
+        boards = self.get_filter(Boards, Boards.name == board_name)
+        if len(boards) == 0:
+            return False
+        return True
+
+    def get_board_id(self, board_name):
+        boards = self.get_filter(Boards, Boards.name == board_name)
+        return boards[0]['id']
+
+    def create_post(self, uid, board_name, title, post_obj_name):
+        board_id = self.get_board_id(board_name)
+        try:
+            self.create(Posts, {
+                'title': title,
+                'timestamp': datetime.now(),
+                'object_name': post_obj_name,
+                'board_id': board_id,
+                'author_id': uid,
+            })
+            return True
+        except:
+            return False
+
+    def create_board(self, uid, board_name):
+        try:
+            self.create(Boards, {
+                'name': board_name,
+                'moderator_id': uid,
+            })
+            return True
+        except:
+            return False
+
 
 # class BBS_DB_Return:
 #     def __init__(self, success, message, data=None):
