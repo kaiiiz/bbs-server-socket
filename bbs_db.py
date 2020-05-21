@@ -232,6 +232,7 @@ class BBS_DB(BBS_DB_API):
                 "subject": m.subject,
                 "from": m.sender.username,
                 "date": m.timestamp.strftime(r'%m/%d'),
+                "mail_obj_name": m.object_name,
             })
 
         return mail_meta

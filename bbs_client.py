@@ -227,7 +227,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
 
     def list_post_handler(self, board_name, condition):
         valid_check = self.socket.recv(1024).decode()
-        if valid_check == "Board doesn't exist.":
+        if valid_check == "Board is not exist.":
             return "Board is not exist.\n"
         return valid_check
 
@@ -348,7 +348,24 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         return valid_check
 
     def retr_mail_handler(self, mail_id):
-        print(mail_id)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        if valid_check == "Mail doesn't exist.":
+            return f"No such mail.\n"
+
+        mail_meta = json.loads(valid_check)
+        mail_obj_name = mail_meta["mail_obj_name"]
+        mail_content = self.bucket.Object(mail_obj_name).get()['Body'].read().decode()
+
+        def format_meta(field, msg): return f"\t{field:10}: {msg}\n"
+        output = ""
+        output += format_meta("Subject", mail_meta['subject'])
+        output += format_meta("From", mail_meta['from'])
+        output += format_meta("Date", mail_meta['date'])
+        output += "\t--\n"
+        output += "\t" + mail_content.replace("<br>", "\n\t") + '\n'
+        return output
 
     def delete_mail_handler(self, mail_id):
         print(mail_id)

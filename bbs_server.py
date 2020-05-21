@@ -170,7 +170,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
 
     def create_post_handler(self, board_name, title, content):
         if not self.db.check_board_exist(board_name):
-            self.socket.sendall(b"Board doesn't exist.")
+            self.socket.sendall(b"Board is not exist.")
             return
         if not self.username:
             self.socket.sendall(b"Client doesn't log in.")
@@ -313,7 +313,17 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         self.socket.sendall(output.encode())
 
     def retr_mail_handler(self, mail_id):
-        print(mail_id)
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+
+        mails = self.db.list_mail(self.uid)
+        mail_idx = int(mail_id) - 1 # 1-based id
+        if mail_idx > len(mails) or mail_idx < 0:
+            self.socket.sendall(b"Mail doesn't exist.")
+            return
+
+        self.socket.sendall(json.dumps(mails[mail_idx]).encode())
 
     def delete_mail_handler(self, mail_id):
         print(mail_id)
