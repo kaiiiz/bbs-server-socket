@@ -106,7 +106,7 @@ class BBS_Command_Parser:
                 parse_list = ()
 
         elif cmd_type == "update-post":
-            regex = r"(update-post)\s+(\d+)\s+--(title|content)\s+(.+)"
+            regex = r"(update-post)\s+(\S+)\s+--(title|content)\s+(.+)"
             try:
                 search = re.search(regex, cmd)
                 post_id = search.group(2)

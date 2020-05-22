@@ -3,6 +3,7 @@ from db.users import Users
 from db.boards import Boards
 from db.posts import Posts
 from db.mails import Mails
+import boto3
 
 from constant import DB_HOST, DB_PORT, DB_USERNAME, DB_PWD
 from sqlalchemy import create_engine
@@ -33,7 +34,15 @@ class SCHEMA_CREATOR:
         session.commit()
         session.close()
 
+def s3_clear():
+    s3 = boto3.resource("s3")
+    for bucket in s3.buckets.all():
+        for obj in bucket.objects.all():
+            obj.delete()
+        bucket.delete()
+
 if __name__ == '__main__':
     creator = SCHEMA_CREATOR(DB_HOST, DB_PORT, DB_USERNAME, DB_PWD)
     creator.clear_table()
     creator.create_table()
+    s3_clear()

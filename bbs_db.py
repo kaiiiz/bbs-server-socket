@@ -232,7 +232,7 @@ class BBS_DB(BBS_DB_API):
                 "id": m.id,
                 "subject": m.subject,
                 "from": m.sender.username,
-                "date": m.timestamp.strftime(r'%m/%d'),
+                "date": m.timestamp,
                 "mail_obj_name": m.object_name,
             })
 

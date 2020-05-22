@@ -173,8 +173,8 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
 
     def register_handler(self, username, email, password):
         valid_check = self.socket.recv(1024).decode()
-        if valid_check == "User is already used.":
-            return "User is already used.\n"
+        if valid_check == "Username is already used.":
+            return "Username is already used.\n"
 
         # valid username, create bucket
         bucket_name = gen_random_bucker_name(f"bbs.client.{username}")
@@ -208,16 +208,16 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         valid_check = self.socket.recv(1024).decode()
         if valid_check == "Client doesn't log in.":
             return "Please login first.\n"
-        if valid_check == "Board is already exist.":
-            return "Board is already exist.\n"
+        if valid_check == "Board already exist.":
+            return "Board already exist.\n"
         return valid_check + '\n'
 
     def create_post_handler(self, board_name, title, content):
         valid_check = self.socket.recv(1024).decode()
         if valid_check == "Client doesn't log in.":
             return "Please login first.\n"
-        if valid_check == "Board is not exist.":
-            return "Board is not exist.\n"
+        if valid_check == "Board does not exist.":
+            return "Board does not exist.\n"
 
         tmp_file = f"./tmp"
         post_obj = {
@@ -240,8 +240,8 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
 
     def list_post_handler(self, board_name, condition):
         valid_check = self.socket.recv(1024).decode()
-        if valid_check == "Board is not exist.":
-            return "Board is not exist.\n"
+        if valid_check == "Board does not exist.":
+            return "Board does not exist.\n"
         return valid_check
 
     def read_post_handler(self, post_id):
@@ -258,7 +258,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         post_content = post_obj['content']
         post_comments = post_obj['comments']
 
-        def format_meta(field, msg): return f"\t{field:10}: {msg}\n"
+        def format_meta(field, msg): return f"\t{field:10}:{msg}\n"
         output = ""
         output += format_meta("Author", post_meta['author'])
         output += format_meta("Title", post_meta['title'])
@@ -267,7 +267,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         output += "\t" + post_content.replace("<br>", "\n\t") + '\n'
         output += "\t--\n"
         for c in post_comments:
-            output += f"\t{c['user']}: {c['content']}\n"
+            output += f"\t{c['user']}:{c['content']}\n"
         return output
 
     def delete_post_handler(self, post_id):
@@ -371,7 +371,7 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         mail_obj_name = mail_meta["mail_obj_name"]
         mail_content = self.bucket.Object(mail_obj_name).get()['Body'].read().decode()
 
-        def format_meta(field, msg): return f"\t{field:10}: {msg}\n"
+        def format_meta(field, msg): return f"\t{field:10}:{msg}\n"
         output = ""
         output += format_meta("Subject", mail_meta['subject'])
         output += format_meta("From", mail_meta['from'])
@@ -390,11 +390,11 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         mail_obj_name = valid_check
         mail_obj = self.bucket.Object(mail_obj_name)
         mail_obj.delete()
-        return "Delete successfully.\n"
+        return "Mail deleted.\n"
 
     def exit_handler(self):
         self.alive.clear()
-        return "Good Bye!\n"
+        return ""
 
 
 def main():

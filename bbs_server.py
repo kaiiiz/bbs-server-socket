@@ -113,7 +113,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         if valid:
             self.socket.sendall(b"Valid username.")
         else:
-            self.socket.sendall(b"User is already used.")
+            self.socket.sendall(b"Username is already used.")
             return
 
         bucket_name = self.socket.recv(1024).decode()
@@ -157,7 +157,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
 
     def create_board_handler(self, board_name):
         if self.db.check_board_exist(board_name):
-            self.socket.sendall(b"Board is already exist.")
+            self.socket.sendall(b"Board already exist.")
             return
         if not self.username:
             self.socket.sendall(b"Client doesn't log in.")
@@ -170,7 +170,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
 
     def create_post_handler(self, board_name, title, content):
         if not self.db.check_board_exist(board_name):
-            self.socket.sendall(b"Board is not exist.")
+            self.socket.sendall(b"Board does not exist.")
             return
         if not self.username:
             self.socket.sendall(b"Client doesn't log in.")
@@ -195,13 +195,13 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
             return f"\t{index:<10}{name:<{max_name_len + 5}}{moderator}\n"
 
         output = format_msg("Index", "Name", "Moderator")
-        for b in boards:
-            output += format_msg(b['id'], b['name'], b['moderator'])
+        for idx, b in enumerate(boards, start=1):
+            output += format_msg(idx, b['name'], b['moderator'])
         self.socket.sendall(output.encode())
 
     def list_post_handler(self, board_name, condition):
         if not self.db.check_board_exist(board_name):
-            self.socket.sendall(b"Board is not exist.")
+            self.socket.sendall(b"Board does not exist.")
             return
 
         posts = self.db.list_post(board_name, condition)
@@ -309,7 +309,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
 
         output = format_msg("ID", "Subject", "From", "Date")
         for idx, m in enumerate(mails, start=1):
-            output += format_msg(idx, m['subject'], m['from'], m['date'])
+            output += format_msg(idx, m['subject'], m['from'], m['date'].strftime(r'%m/%d'))
         self.socket.sendall(output.encode())
 
     def retr_mail_handler(self, mail_id):
@@ -323,7 +323,9 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
             self.socket.sendall(b"Mail doesn't exist.")
             return
 
-        self.socket.sendall(json.dumps(mails[mail_idx]).encode())
+        mail = mails[mail_idx]
+        mail['date'] = mail['date'].strftime(r'%Y-%m-%d')
+        self.socket.sendall(json.dumps(mail).encode())
 
     def delete_mail_handler(self, mail_id):
         if not self.username:
