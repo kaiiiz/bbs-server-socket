@@ -21,12 +21,15 @@ class BBS_Server_Socket(threading.Thread, metaclass=ABCMeta):
         welcome_msg = b"********************************\n** Welcome to the BBS server. **\n********************************\n"
         self.socket.send(welcome_msg)
 
-        while True:
-            cmd = self.socket.recv(1024).decode()
-            if cmd == " ":  # client check connection
-                pass
-            else:
-                self.execute(cmd)
+        try:
+            while True:
+                cmd = self.socket.recv(1024).decode()
+                if cmd == " ":  # client check connection
+                    pass
+                else:
+                    self.execute(cmd)
+        except BrokenPipeError:
+            print("Client exit")
 
         self.socket.close()
 
@@ -343,7 +346,7 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         self.socket.sendall(mail_meta['mail_obj_name'].encode())
 
     def exit_handler(self):
-        print('client exit')
+        pass
 
 
 def main():
