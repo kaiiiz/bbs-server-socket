@@ -1,14 +1,14 @@
-from constant import BBS_HOST, BBS_PORT
-from constant import DB_HOST, DB_PORT, DB_USERNAME, DB_PWD
 import socket
 import threading
 import os
 import sys
 import json
-
 from abc import ABCMeta, abstractmethod
+
 from bbs_cmd_parser import BBS_Command_Parser
 from bbs_db import BBS_DB
+from constant import BBS_HOST, BBS_PORT
+from constant import DB_HOST, DB_PORT, DB_USERNAME, DB_PWD
 
 
 class BBS_Server_Socket(threading.Thread, metaclass=ABCMeta):
@@ -107,6 +107,15 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
 
         elif cmd_type == "delete-mail":
             self.delete_mail_handler(mail_id=cmd_list[1])
+
+        elif cmd_type == "subscribe":
+            pass
+
+        elif cmd_type == "unsubscribe":
+            pass
+
+        elif cmd_type == "list-sub":
+            pass
 
         elif cmd_type == "exit":
             self.exit_handler()

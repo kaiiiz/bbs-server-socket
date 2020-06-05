@@ -10,9 +10,11 @@ import boto3
 import string
 import random
 import json
-
+from kafka import KafkaProducer, KafkaClient
 from abc import ABCMeta, abstractmethod
+
 from bbs_cmd_parser import BBS_Command_Parser
+from constant import KAFKA_SERVER, KAFKA_PORT
 
 parser = argparse.ArgumentParser()
 parser.add_argument("host")
@@ -33,6 +35,14 @@ def gen_random_name(prefix):
     fill_size = 62 - len(prefix)
     suffix = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(fill_size)])
     return prefix + '.' + suffix
+
+class Producer:
+    def __init__(self):
+        pass
+
+class Consumer:
+    def __init__(self):
+        pass
 
 
 class BBS_Client_Socket(threading.Thread, metaclass=ABCMeta):
@@ -166,6 +176,21 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
 
         elif cmd_type == "delete-mail":
             return self.delete_mail_handler(mail_id=cmd_list[1])
+
+        elif cmd_type == "subscribe":
+            if cmd_list[1] == "--board":
+                return self.subscribe_board_handler(board_name=cmd_list[2], keyword=cmd_list[4])
+            if cmd_list[1] == "--author":
+                return self.subscribe_author_handler(author_name=cmd_list[2], keyword=cmd_list[4])
+
+        elif cmd_type == "unsubscribe":
+            if cmd_list[1] == "--board":
+                return self.unsubscribe_board_handler(board_name=cmd_list[2])
+            if cmd_list[1] == "--author":
+                return self.unsubscribe_author_handler(author_name=cmd_list[2])
+
+        elif cmd_type == "list-sub":
+            return self.list_sub_handler()
 
         elif cmd_type == "exit":
             return self.exit_handler()
@@ -391,6 +416,21 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         mail_obj = self.bucket.Object(mail_obj_name)
         mail_obj.delete()
         return "Mail deleted.\n"
+
+    def subscribe_board_handler(self, board_name, keyword):
+        print(board_name, keyword)
+
+    def subscribe_author_handler(self, author_name, keyword):
+        print(author_name, keyword)
+
+    def unsubscribe_board_handler(self, board_name):
+        print(board_name)
+
+    def unsubscribe_author_handler(self, author_name):
+        print(author_name)
+
+    def list_sub_handler(self):
+        print("list-sub")
 
     def exit_handler(self):
         self.alive.clear()
