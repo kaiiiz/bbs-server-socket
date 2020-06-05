@@ -10,8 +10,10 @@ import boto3
 import string
 import random
 import json
-from kafka import KafkaProducer, KafkaClient
+import time
+from kafka import KafkaProducer, KafkaConsumer
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 
 from bbs_cmd_parser import BBS_Command_Parser
 from constant import KAFKA_SERVER, KAFKA_PORT
@@ -36,14 +38,92 @@ def gen_random_name(prefix):
     suffix = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(fill_size)])
     return prefix + '.' + suffix
 
-class Producer:
+class BBS_Notifier:
     def __init__(self):
-        pass
+        self.producer = KafkaProducer(bootstrap_servers=[f"{KAFKA_SERVER}:{KAFKA_PORT}"],
+                                      value_serializer=lambda m: json.dumps(m).encode())
 
-class Consumer:
-    def __init__(self):
-        pass
+    def publish(self, board_name, post_title, post_author):
+        data = {
+            "board_name": board_name,
+            "post_title": post_title,
+            "post_author": post_author,
+        }
+        self.producer.send(f"board_{board_name}", data)
+        self.producer.send(f"author_{post_author}", data)
 
+class BBS_Subsciber(threading.Thread):
+    def __init__(self, alive):
+        threading.Thread.__init__(self)
+        self.alive = alive
+        self.board_sub = defaultdict(set)
+        self.author_sub = defaultdict(set)
+        self.consumer = None
+
+    def subscribe_board(self, board_name, keyword):
+        if keyword in self.board_sub[board_name]:
+            return "Already subscribed\n"
+        else:
+            self.board_sub[board_name].add(keyword)
+            self.renew_consumer()
+            return "Subscribe successfully\n"
+
+    def subscribe_author(self, author_name, keyword):
+        if keyword in self.author_sub[author_name]:
+            return "Already subscribed\n"
+        else:
+            self.author_sub[author_name].add(keyword)
+            self.renew_consumer()
+            return "Subscribe successfully\n"
+
+    def unsubscribe_board(self, board_name):
+        if board_name not in self.board_sub:
+            return f"You haven't subscribed {board_name}\n"
+        else:
+            self.board_sub.pop(board_name)
+            self.renew_consumer()
+            return "Unsubscribe successfully\n"
+
+    def unsubscribe_author(self, author_name):
+        if author_name not in self.author_sub:
+            return f"You haven't subscribed {author_name}\n"
+        else:
+            self.author_sub.pop(author_name)
+            self.renew_consumer()
+            return "Unsubscribe successfully\n"
+
+    def list_sub(self):
+        for board_name, kws in self.board_sub.items():
+            for kw in kws:
+                print(f"Board: {board_name}: {kw}")
+        for author_name, kws in self.author_sub.items():
+            for kw in kws:
+                print(f"Author: {author_name}: {kw}")
+
+    def renew_consumer(self):
+        sub_list = []
+        for k in self.board_sub:
+            sub_list.append(f"board_{k}")
+        for k in self.author_sub:
+            sub_list.append(f"author_{k}")
+
+        if len(sub_list) > 0:
+            self.consumer = KafkaConsumer(bootstrap_servers=[f"{KAFKA_SERVER}:{KAFKA_PORT}"],
+                                          value_deserializer=lambda m: json.loads(m.decode()))
+            self.consumer.subscribe(sub_list)
+        else:
+            self.consumer = None
+
+    def run(self):
+        while not self.alive.is_set():
+            try:
+                message = self.consumer.poll(timeout_ms=1000)
+                for topic_partition, records in message.items():
+                    for r in records:
+                        print(r.value)
+            except:
+                time.sleep(1)
+                continue
 
 class BBS_Client_Socket(threading.Thread, metaclass=ABCMeta):
     def __init__(self, cmd_q, reply_q, alive):
@@ -89,6 +169,8 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         self.s3 = boto3.resource("s3")
         self.bucket = None
         self.my_username = None
+        self.notifier = None
+        self.subscriber = None
 
     def socket_err_handler(func):
         def wrapped_func(self, *args, **kwargs):
@@ -217,6 +299,9 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
             return "Login failed.\n"
 
         self.my_username = username
+        self.notifier = BBS_Notifier()
+        self.subscriber = BBS_Subsciber(self.alive)
+        self.subscriber.start()
         # retrieve bucket name from server
         self.bucket_name = valid_check
         self.bucket = self.s3.Bucket(self.bucket_name)
@@ -224,6 +309,8 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
 
     def logout_handler(self):
         self.my_username = None
+        self.notifier = None
+        self.subscriber = None
         return self.socket.recv(1024).decode() + '\n'
 
     def whoami_handler(self):
@@ -255,6 +342,8 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         post_obj_name = gen_random_name(f"bbs.post.{title}")
         self.bucket.upload_file(tmp_file, post_obj_name)
         os.remove(tmp_file)
+
+        self.notifier.publish(board_name, title, self.my_username)
 
         # store metadata of post
         self.socket.sendall(post_obj_name.encode())
@@ -418,19 +507,35 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
         return "Mail deleted.\n"
 
     def subscribe_board_handler(self, board_name, keyword):
-        print(board_name, keyword)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        return self.subscriber.subscribe_board(board_name, keyword)
 
     def subscribe_author_handler(self, author_name, keyword):
-        print(author_name, keyword)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        return self.subscriber.subscribe_author(author_name, keyword)
 
     def unsubscribe_board_handler(self, board_name):
-        print(board_name)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        return self.subscriber.unsubscribe_board(board_name)
 
     def unsubscribe_author_handler(self, author_name):
-        print(author_name)
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        return self.subscriber.unsubscribe_author(author_name)
 
     def list_sub_handler(self):
-        print("list-sub")
+        valid_check = self.socket.recv(1024).decode()
+        if valid_check == "Client doesn't log in.":
+            return "Please login first.\n"
+        self.subscriber.list_sub()
+        return ""
 
     def exit_handler(self):
         self.alive.clear()

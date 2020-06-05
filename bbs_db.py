@@ -91,10 +91,12 @@ class BBS_DB(BBS_DB_API):
 
     @save_transaction
     def login(self, username, password):
-        user = self.get_filter(Users, Users.username == username)[0]
-        if user.password != password:
+        user = self.get_filter(Users, Users.username == username)
+        if len(user) == 0:
             return False, None
-        return True, user.id
+        if user[0].password != password:
+            return False, None
+        return True, user[0].id
 
     @save_transaction
     def get_bucket_name(self, username):
