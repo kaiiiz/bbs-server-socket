@@ -11,6 +11,7 @@ import string
 import random
 import json
 import time
+import re
 from kafka import KafkaProducer, KafkaConsumer
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
@@ -93,12 +94,19 @@ class BBS_Subsciber(threading.Thread):
             return "Unsubscribe successfully\n"
 
     def list_sub(self):
+        board_output = []
         for board_name, kws in self.board_sub.items():
-            for kw in kws:
-                print(f"Board: {board_name}: {kw}")
+            kw_str = ", ".join(kws)
+            board_output.append(f"{board_name}: {kw_str}")
+        if len(board_output):
+            print("Board: " + "; ".join(board_output))
+
+        author_output = []
         for author_name, kws in self.author_sub.items():
-            for kw in kws:
-                print(f"Author: {author_name}: {kw}")
+            kw_str = ", ".join(kws)
+            author_output.append(f"{author_name}: {kw_str}")
+        if len(author_output):
+            print("Author: " + "; ".join(author_output))
 
     def renew_consumer(self):
         sub_list = []
@@ -107,23 +115,56 @@ class BBS_Subsciber(threading.Thread):
         for k in self.author_sub:
             sub_list.append(f"author_{k}")
 
+        if self.consumer is not None:
+            self.consumer.close()
+
         if len(sub_list) > 0:
-            self.consumer = KafkaConsumer(bootstrap_servers=[f"{KAFKA_SERVER}:{KAFKA_PORT}"],
+            self.consumer = KafkaConsumer(*sub_list,
+                                          bootstrap_servers=[f"{KAFKA_SERVER}:{KAFKA_PORT}"],
                                           value_deserializer=lambda m: json.loads(m.decode()))
-            self.consumer.subscribe(sub_list)
         else:
             self.consumer = None
 
+    def print_record(self, topic, board_name, post_title, post_author):
+        # get keyword
+        try:
+            board_regex = r"board_(.+)"
+            search = re.search(board_regex, topic)
+            board_name = search.group(1)
+            kws = self.board_sub[board_name]
+        except:
+            try:
+                author_regex = r"author_(.+)"
+                search = re.search(author_regex, topic)
+                author_name = search.group(1)
+                kws = self.author_sub[author_name]
+            except:
+                print("Invalid topic")
+                return
+
+        # filter post by keyword
+        for kw in kws:
+            if kw in post_title:
+                print(f"*[{board_name}] {post_title} - by {post_author}*")
+                break
+
     def run(self):
-        while not self.alive.is_set():
+        while self.alive.is_set():
             try:
                 message = self.consumer.poll(timeout_ms=1000)
                 for topic_partition, records in message.items():
+                    topic = topic_partition.topic
                     for r in records:
-                        print(r.value)
+                        board_name = r.value["board_name"]
+                        post_title = r.value["post_title"]
+                        post_author = r.value["post_author"]
+                        self.print_record(topic, board_name, post_title, post_author)
             except:
                 time.sleep(1)
                 continue
+
+        if self.consumer is not None:
+            self.consumer.close()
 
 class BBS_Client_Socket(threading.Thread, metaclass=ABCMeta):
     def __init__(self, cmd_q, reply_q, alive):
@@ -559,7 +600,7 @@ def main():
                     res = reply_q.get()
                     print(res, end='')
     except:
-        pass
+        alive.clear()
 
 
 if __name__ == '__main__':
