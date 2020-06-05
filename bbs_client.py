@@ -178,16 +178,16 @@ class BBS_Client(BBS_Client_Socket, BBS_Command_Parser):
             return self.delete_mail_handler(mail_id=cmd_list[1])
 
         elif cmd_type == "subscribe":
-            if cmd_list[1] == "--board":
-                return self.subscribe_board_handler(board_name=cmd_list[2], keyword=cmd_list[4])
-            if cmd_list[1] == "--author":
-                return self.subscribe_author_handler(author_name=cmd_list[2], keyword=cmd_list[4])
+            if cmd_list[0] == "subscribe-board":
+                return self.subscribe_board_handler(board_name=cmd_list[1], keyword=cmd_list[2])
+            if cmd_list[0] == "subscribe-author":
+                return self.subscribe_author_handler(author_name=cmd_list[1], keyword=cmd_list[2])
 
         elif cmd_type == "unsubscribe":
-            if cmd_list[1] == "--board":
-                return self.unsubscribe_board_handler(board_name=cmd_list[2])
-            if cmd_list[1] == "--author":
-                return self.unsubscribe_author_handler(author_name=cmd_list[2])
+            if cmd_list[0] == "unsubscribe-board":
+                return self.unsubscribe_board_handler(board_name=cmd_list[1])
+            if cmd_list[0] == "unsubscribe-author":
+                return self.unsubscribe_author_handler(author_name=cmd_list[1])
 
         elif cmd_type == "list-sub":
             return self.list_sub_handler()

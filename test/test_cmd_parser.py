@@ -159,13 +159,13 @@ def test_delete_mail():
 
 def test_subscribe():
     cmd = "subscribe --board board-name --keyword kw"
-    assert cmd_parser.parse(cmd) == ('subscribe', True, ('subscribe', '--board', 'board-name', '--keyword', 'kw'))
+    assert cmd_parser.parse(cmd) == ('subscribe', True, ('subscribe-board', 'board-name', 'kw'))
     cmd = "subscribe --board board-name"
     assert cmd_parser.parse(cmd) == ('subscribe', False, ())
     cmd = "subscribe --keyword kw"
     assert cmd_parser.parse(cmd) == ('subscribe', False, ())
     cmd = "subscribe --author author-name --keyword kw"
-    assert cmd_parser.parse(cmd) == ('subscribe', True, ('subscribe', '--author', 'author-name', '--keyword', 'kw'))
+    assert cmd_parser.parse(cmd) == ('subscribe', True, ('subscribe-author', 'author-name', 'kw'))
     cmd = "subscribe --author author-name"
     assert cmd_parser.parse(cmd) == ('subscribe', False, ())
     cmd = "subscribe --keyword kw"
@@ -174,9 +174,9 @@ def test_subscribe():
 
 def test_unsubscribe():
     cmd = "unsubscribe --board board-name"
-    assert cmd_parser.parse(cmd) == ('unsubscribe', True, ('unsubscribe', '--board', 'board-name'))
+    assert cmd_parser.parse(cmd) == ('unsubscribe', True, ('unsubscribe-board', 'board-name'))
     cmd = "unsubscribe --author author-name"
-    assert cmd_parser.parse(cmd) == ('unsubscribe', True, ('unsubscribe', '--author', 'author-name'))
+    assert cmd_parser.parse(cmd) == ('unsubscribe', True, ('unsubscribe-author', 'author-name'))
 
 
 def test_list_sub():
