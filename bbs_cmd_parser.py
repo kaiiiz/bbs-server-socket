@@ -161,6 +161,27 @@ class BBS_Command_Parser:
                 parse_status = False
                 parse_list = ()
 
+        elif cmd_type == "subscribe":
+            if len(cmd_list) == 5:
+                parse_list = cmd_list
+            else:
+                parse_status = False
+                parse_list = ()
+
+        elif cmd_type == "unsubscribe":
+            if len(cmd_list) == 3:
+                parse_list = cmd_list
+            else:
+                parse_status = False
+                parse_list = ()
+
+        elif cmd_type == "list-sub":
+            if len(cmd_list) == 1:
+                parse_list = cmd_list
+            else:
+                parse_status = False
+                parse_list = ()
+
         elif cmd_type == "exit":
             if len(cmd_list) == 1:
                 parse_list = cmd_list
@@ -221,6 +242,15 @@ class BBS_Command_Parser:
 
         elif cmd_type == "delete-mail":
             return "Usage: delete-mail <mail#>"
+
+        elif cmd_type == "subscribe":
+            return "Usage: subscribe --board/author <board-name>/<author-name> --keyword <keyword>"
+
+        elif cmd_type == "unsubscribe":
+            return "Usage: unsubscribe --board/author <board-name>/<author-name>"
+
+        elif cmd_type == "list-sub":
+            return "Usage: list-sub"
 
         elif cmd_type == "exit":
             return "Usage: exit"
