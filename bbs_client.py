@@ -12,6 +12,7 @@ import random
 import json
 import time
 import re
+import uuid
 from kafka import KafkaProducer, KafkaConsumer
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
@@ -120,6 +121,7 @@ class BBS_Subsciber(threading.Thread):
 
         if len(sub_list) > 0:
             self.consumer = KafkaConsumer(*sub_list,
+                                          group_id=str(uuid.uuid4()),
                                           bootstrap_servers=[f"{KAFKA_SERVER}:{KAFKA_PORT}"],
                                           value_deserializer=lambda m: json.loads(m.decode()))
         else:
