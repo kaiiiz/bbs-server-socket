@@ -161,6 +161,47 @@ class BBS_Command_Parser:
                 parse_status = False
                 parse_list = ()
 
+        elif cmd_type == "subscribe":
+            sub_board_regex = r"subscribe\s+--board\s+(.+)\s+--keyword\s+(.+)"
+            try:
+                search = re.search(sub_board_regex, cmd)
+                board_name = search.group(1)
+                keyword = search.group(2)
+                parse_list = ("subscribe-board", board_name, keyword)
+            except:
+                sub_author_regex = r"subscribe\s+--author\s+(.+)\s+--keyword\s+(.+)"
+                try:
+                    search = re.search(sub_author_regex, cmd)
+                    author_name = search.group(1)
+                    keyword = search.group(2)
+                    parse_list = ("subscribe-author", author_name, keyword)
+                except:
+                    parse_status = False
+                    parse_list = ()
+
+        elif cmd_type == "unsubscribe":
+            sub_board_regex = r"unsubscribe\s+--board\s+(.+)"
+            try:
+                search = re.search(sub_board_regex, cmd)
+                board_name = search.group(1)
+                parse_list = ("unsubscribe-board", board_name)
+            except:
+                sub_author_regex = r"unsubscribe\s+--author\s+(.+)"
+                try:
+                    search = re.search(sub_author_regex, cmd)
+                    author_name = search.group(1)
+                    parse_list = ("unsubscribe-author", author_name)
+                except:
+                    parse_status = False
+                    parse_list = ()
+
+        elif cmd_type == "list-sub":
+            if len(cmd_list) == 1:
+                parse_list = cmd_list
+            else:
+                parse_status = False
+                parse_list = ()
+
         elif cmd_type == "exit":
             if len(cmd_list) == 1:
                 parse_list = cmd_list
@@ -221,6 +262,15 @@ class BBS_Command_Parser:
 
         elif cmd_type == "delete-mail":
             return "Usage: delete-mail <mail#>"
+
+        elif cmd_type == "subscribe":
+            return "Usage: subscribe --board/author <board-name>/<author-name> --keyword <keyword>"
+
+        elif cmd_type == "unsubscribe":
+            return "Usage: unsubscribe --board/author <board-name>/<author-name>"
+
+        elif cmd_type == "list-sub":
+            return "Usage: list-sub"
 
         elif cmd_type == "exit":
             return "Usage: exit"

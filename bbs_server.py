@@ -1,14 +1,14 @@
-from constant import BBS_HOST, BBS_PORT
-from constant import DB_HOST, DB_PORT, DB_USERNAME, DB_PWD
 import socket
 import threading
 import os
 import sys
 import json
-
 from abc import ABCMeta, abstractmethod
+
 from bbs_cmd_parser import BBS_Command_Parser
 from bbs_db import BBS_DB
+from constant import BBS_HOST, BBS_PORT
+from constant import DB_HOST, DB_PORT, DB_USERNAME, DB_PWD
 
 
 class BBS_Server_Socket(threading.Thread, metaclass=ABCMeta):
@@ -21,12 +21,17 @@ class BBS_Server_Socket(threading.Thread, metaclass=ABCMeta):
         welcome_msg = b"********************************\n** Welcome to the BBS server. **\n********************************\n"
         self.socket.send(welcome_msg)
 
-        while True:
-            cmd = self.socket.recv(1024).decode()
-            if cmd == " ":  # client check connection
-                pass
-            else:
-                self.execute(cmd)
+        try:
+            while True:
+                cmd = self.socket.recv(1024).decode()
+                if cmd == " ":  # client check connection
+                    pass
+                else:
+                    self.execute(cmd)
+        except BrokenPipeError:
+            print("Client exit")
+        except ConnectionResetError:
+            print("Client exit")
 
         self.socket.close()
 
@@ -104,6 +109,21 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
 
         elif cmd_type == "delete-mail":
             self.delete_mail_handler(mail_id=cmd_list[1])
+
+        elif cmd_type == "subscribe":
+            if cmd_list[0] == "subscribe-board":
+                return self.subscribe_board_handler(board_name=cmd_list[1], keyword=cmd_list[2])
+            if cmd_list[0] == "subscribe-author":
+                return self.subscribe_author_handler(author_name=cmd_list[1], keyword=cmd_list[2])
+
+        elif cmd_type == "unsubscribe":
+            if cmd_list[0] == "unsubscribe-board":
+                return self.unsubscribe_board_handler(board_name=cmd_list[1])
+            if cmd_list[0] == "unsubscribe-author":
+                return self.unsubscribe_author_handler(author_name=cmd_list[1])
+
+        elif cmd_type == "list-sub":
+            return self.list_sub_handler()
 
         elif cmd_type == "exit":
             self.exit_handler()
@@ -342,8 +362,38 @@ class BBS_Server(BBS_Server_Socket, BBS_Command_Parser):
         self.db.delete_mail(mail_meta['id'])
         self.socket.sendall(mail_meta['mail_obj_name'].encode())
 
+    def subscribe_board_handler(self, board_name, keyword):
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+        self.socket.sendall(b"Valid action")
+
+    def subscribe_author_handler(self, author_name, keyword):
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+        self.socket.sendall(b"Valid action")
+
+    def unsubscribe_board_handler(self, board_name):
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+        self.socket.sendall(b"Valid action")
+
+    def unsubscribe_author_handler(self, author_name):
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+        self.socket.sendall(b"Valid action")
+
+    def list_sub_handler(self):
+        if not self.username:
+            self.socket.sendall(b"Client doesn't log in.")
+            return
+        self.socket.sendall(b"Valid action")
+
     def exit_handler(self):
-        print('client exit')
+        pass
 
 
 def main():
