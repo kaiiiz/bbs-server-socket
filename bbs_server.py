@@ -3,13 +3,20 @@ import threading
 import os
 import sys
 import json
+import argparse
 from abc import ABCMeta, abstractmethod
 
 from bbs_cmd_parser import BBS_Command_Parser
 from bbs_db import BBS_DB
-from constant import BBS_HOST, BBS_PORT
+from constant import BBS_HOST, BBS_DEFAULT_PORT
 from constant import DB_HOST, DB_PORT, DB_USERNAME, DB_PWD
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument("port", nargs='?', default=BBS_DEFAULT_PORT)
+args = parser.parse_args()
+
+BBS_PORT = int(args.port)
 
 class BBS_Server_Socket(threading.Thread, metaclass=ABCMeta):
     def __init__(self, socket):
