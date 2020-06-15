@@ -26,7 +26,7 @@ $ docker-compose up -d
 
 ### Amazon
 
-You'll need to store your amazon credential on `~/.aws/credentials`.
+Store your credential in `~/.aws/credentials`.
 
 ```
 [default]
@@ -37,15 +37,13 @@ aws_session_token=
 
 ### Apache Kafka
 
-I start the service on Amazon EC2. Visit [Apache Kafka](https://kafka.apache.org/intro) for more details.
+Visit [Apache Kafka](https://kafka.apache.org/intro) for more details.
 
-Also need to allow inbound connections on port 9092 by changing policy of Amazon Security Groups.
+I ran the service on Amazon EC2. Don't forget to allow inbound connections on port 9092 by changing the policy of Amazon Security Groups.
 
 ### Python environment
 
-I use poetry to maintain package dependency. With the help of virtual environment, I'll not mess up my global python environment.
-
-The detail of package dependency, see [pyproject.toml](https://github.com/kaiiiz/bbs-server-socket/blob/master/pyproject.toml).
+In order to keep my global python environment clean, I use poetry to maintain package dependency. The detail of package dependency, see [pyproject.toml](https://github.com/kaiiiz/bbs-server-socket/blob/master/pyproject.toml).
 
 Start virtual environment:
 
@@ -85,11 +83,11 @@ $ python bbs_client.py {server_ip} {server_port}
 
 ## Implementation
 
-The master branch is the final version of the course project. The source code of different lab is tracked on different branch, checkout to [Lab1](https://github.com/kaiiiz/bbs-server-socket/tree/Lab1), [Lab2](https://github.com/kaiiiz/bbs-server-socket/tree/Lab2), [Lab3](https://github.com/kaiiiz/bbs-server-socket/tree/Lab3), [Lab4](https://github.com/kaiiiz/bbs-server-socket/tree/Lab4) for more details.
+The master branch is the final version of the course project. The source code of different labs is tracked on different branch, checkout to [Lab1](https://github.com/kaiiiz/bbs-server-socket/tree/Lab1), [Lab2](https://github.com/kaiiiz/bbs-server-socket/tree/Lab2), [Lab3](https://github.com/kaiiiz/bbs-server-socket/tree/Lab3), [Lab4](https://github.com/kaiiiz/bbs-server-socket/tree/Lab4) for more details.
 
 ### Programming Language
 
-The spec doesn't limit to any programming language. I choose python, you can use C/C++, node.js... as well.
+No specific programming language is required in spec. I choose python, you can use C/C++, node.js... as well.
 
 ### Database
 
@@ -99,7 +97,7 @@ MariaDB + SQLAlchemy ORM. The schema is defined in [db](https://github.com/kaiii
 
 ![](https://i.imgur.com/Rxr6gCv.png)
 
-Server and Client both inherit to same command parser in order to maintain the state of socket when different commands are executed.
+Server and Client both inherit to same command parser in order to maintain the state of socket.
 
 BBS_Notifier (Producer) and BBS_Subscriber (Consumer) refers to TAs reference design at Lab4.
 
