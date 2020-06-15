@@ -1,0 +1,28 @@
+0:update-post 1 --title New title
+0:login diana 53321
+1:login ceres 10214
+2:login minerva 42424
+3:login vulcanus 15151
+0:read 5
+0:read 2
+2:read 1
+1:update-post 1 --title nphw4 demo time
+0:update-post 1 --title nphw4 demo time
+3:read 1
+2:update-post 3 --content Updated.<br>I will delete it.
+1:read 4
+0:comment 4 Today.
+1:delete-post 1
+1:read 4
+0:delete-post 1
+1:comment 4 Thank you.
+0:delete-post 1
+0:logout
+0:delete-post 1
+1:logout
+2:logout
+3:logout
+0:exit
+1:exit
+2:exit
+3:exit

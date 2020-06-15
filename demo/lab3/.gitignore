@@ -1,0 +1,4 @@
+.vscode/
+*.py
+output/
+requirements.txt

@@ -1,0 +1,39 @@
+0:create-post li_il --title nphw4demo --content Time to demo
+0:login diana 53321
+1:login ceres 10214
+2:login minerva 42424
+3:login vulcanus 15151
+0:subscribe --author minerva --keyword hw4
+1:subscribe --author vulcanus --keyword everyone
+3:subscribe --board he_eh --keyword demo
+0:subscribe --board ke_ek --keyword demo
+1:subscribe --board ke_ek --keyword demo
+2:subscribe --author diana --keyword exam
+3:subscribe --author minerva --keyword here
+0:create-post li_il --title nphw4demo --content Time to demo
+1:create-post kt_tk --title NP demo time --content When is demo time
+2:create-post ke_ek --title Anyone here --content My first post.<br>Ya!
+3:create-post ke_ek --title Hello everyone --content Hello I am vulcanus.
+1:create-post li_il --title NP demo time --content When is demo time
+3:create-post ke_ek --title demo result --content Hmmmm...
+2:list-post li_il
+3:list-post he_eh
+0:list-post li_il ##demo
+1:create-post ke_ek --title I am here. --content Do you read  my post
+2:create-post ke_ek --title HaHa --content I read that.<br>Ya!
+3:list-post ke_ek
+0:list-sub
+1:list-sub
+2:list-sub
+3:list-sub
+0:unsubscribe --author minerva
+1:unsubscribe --author vulcanus
+2:unsubscribe --board ke_ek
+0:logout
+1:logout
+2:logout
+3:logout
+0:exit
+1:exit
+2:exit
+3:exit

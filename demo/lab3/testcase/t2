@@ -1,0 +1,23 @@
+0:login ceres 11130
+1:login ceres 10214
+2:login minerva 42424
+3:login vulcanus 15151
+0:login diana 53321
+0:login diana 53321
+2:login minerva 42424
+0:create-board li_il
+2:create-board li_il
+2:create-board ke_ek
+1:create-board te_et
+3:list-board
+2:list-board
+1:list-board
+0:logout
+1:logout
+2:logout
+0:create-board ne_en
+3:logout
+0:exit
+1:exit
+2:exit
+3:exit

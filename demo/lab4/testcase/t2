@@ -1,0 +1,30 @@
+0:login ceres 11130
+1:login ceres 10214
+2:login minerva 42424
+3:login vulcanus 15151
+0:login diana 53321
+0:login diana 53321
+2:login minerva 42424
+3:list-board
+2:list-board
+1:list-board
+0:subscribe --author minerva --keyword nothing
+1:subscribe --author vulcanus --keyword nothing
+2:subscribe --board li_il --keyword nothing
+3:unsubscribe --author minerva
+0:unsubscribe --author minerva
+1:unsubscribe --author vulcanus
+2:unsubscribe --board li_il
+0:list-sub
+1:list-sub
+2:list-sub
+3:list-sub
+0:logout
+1:logout
+2:logout
+0:create-board ne_en
+3:logout
+0:exit
+1:exit
+2:exit
+3:exit

@@ -1,0 +1,17 @@
+0:register diana diana@nctu.edu.tw 53321
+1:register ceres ceres@nctu.edu.tw 10214
+2:register minerva minerva@nctu.edu.tw 42424
+3:register vulcanus vulcanus@nctu.edu.tw 15151
+0:register minerva minerva@nctu.edu.tw 11215
+2:register ceres ceres@nctu.edu.tw 15313
+0:login diana 53321
+1:login ceres 10214
+2:login minerva 42424
+0:create-board li_il
+2:create-board li_il
+2:create-board ke_ek
+1:create-board te_et
+0:exit
+1:exit
+2:exit
+3:exit
