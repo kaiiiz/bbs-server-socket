@@ -1,6 +1,6 @@
 # bbs-server-socket
 
-This is the course project of the NCTU Network Programming in Spring 2020.
+This is the course project of Intro. to Network Programming at NCTU in Spring 2020.
 
 In these labs, you'll mainly learn the detail about socket programming. Also, you'll be asked to interact with different services such as Amazon S3, Apache Kafka and database.
 
